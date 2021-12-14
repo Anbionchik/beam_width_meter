@@ -53,7 +53,7 @@
      <string>Начать измерение</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="step_across_line">
+   <widget class="QLineEdit" name="step_across_beam">
     <property name="geometry">
      <rect>
       <x>500</x>
@@ -63,7 +63,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QLineEdit" name="step_along_line">
+   <widget class="QLineEdit" name="step_along_beam">
     <property name="geometry">
      <rect>
       <x>632</x>
@@ -97,6 +97,16 @@
     </property>
     <property name="text">
      <string>Шаг вдоль пучка, мм</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="info_field">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>280</y>
+      <width>251</width>
+      <height>261</height>
+     </rect>
     </property>
    </widget>
   </widget>
