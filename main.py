@@ -7,6 +7,9 @@ Created on Tue Dec 14 10:36:37 2021
 import sys
 from PyQt5 import QtWidgets
 import main_window
+from socket import socket, AF_INET, SOCK_STREAM, timeout
+import time
+
 
 
 class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
@@ -23,8 +26,24 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_across_beam.textChanged.connect(self.params_setter)
         self.step_along_beam.textChanged.connect(self.params_setter)
         
+        self.maestro_address = "192.168.77.77"
+        self.maestro_port = 5000
+        
     def connect_powermeter(self):
-        self.info_field.appendPlainText("Подключен поверметр")
+        
+        addr = (self.maestro_address, self.maestro_port)
+        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        self.tcp_socket.settimeout(4.0)
+        self.tcp_socket.connect(addr)
+        try:
+            out_data = str.encode("*VER")
+            self.tcp_socket.send(out_data)
+            in_data = self.tcp_socket.recv(1024)
+            in_data = bytes.decode(in_data)
+            self.show_info("Измеритель мощности подключён: " + in_data)
+            self.tcp_socket.close()
+        except timeout:
+            self.show_info("Не удалось подключиться к измерителю мощности :(")
     def connect_translator(self):
         self.info_field.appendPlainText("Подключен транслатор")
     def params_setter(self):
@@ -34,6 +53,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.info_field.appendPlainText(str(self.step_along_value))
     def execute_measurment(self):
         self.info_field.appendPlainText("Начинаем измерения")
+        
+    def show_info(self, message):
+        self.info_field.appendPlainText(message)
     
     
 
