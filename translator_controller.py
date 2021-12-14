@@ -12,13 +12,20 @@ import tempfile
 import re
 import csv
 from multiprocessing.pool import ThreadPool
-from pyximc_wrapper.pyximc import *
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
 if not "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\" in os.environ["Path"]:
     os.environ["Path"] = dll_path + ";" + os.environ["Path"]
 
+from pyximc_wrapper.pyximc import *
+
+if sys.version_info >= (3,0):
+    import urllib.parse
+
+lib.set_bindy_key("pyximc_wrapper/keyfile.sqlite".encode("utf-8")) # Search for the key file in the current directory.
+
 def initialize_axes():
+    
     # This is device search and enumeration with probing. It gives more information about devices.
     probe_flags = EnumerateFlags.ENUMERATE_PROBE + EnumerateFlags.ENUMERATE_NETWORK
     enum_hints = b"addr="
