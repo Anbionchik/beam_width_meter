@@ -143,3 +143,17 @@ def test_run(device_id):
     lib.command_right(device_id)
     time.sleep(2)
     lib.command_sstp(device_id)
+    
+def get_position(device_id_x, device_id_y, user_unit):
+    x_pos = get_position_calb_t()
+    y_pos = get_position_calb_t()
+    lib.get_position_calb(device_id_x, byref(x_pos), user_unit)
+    lib.get_position_calb(device_id_y, byref(y_pos), user_unit)
+    
+    return (x_pos.Position, y_pos.Position)
+
+def move_to_coords(device_id_x, device_id_y, coords, user_unit):
+    lib.command_move_calb(device_id_x, c_float(float(coords[0])), byref(user_unit))
+    lib.command_move_calb(device_id_y, c_float(float(coords[1])), byref(user_unit))
+    lib.command_wait_for_stop(device_id_x, 10)
+    lib.command_wait_for_stop(device_id_y, 10)

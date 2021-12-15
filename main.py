@@ -17,7 +17,9 @@ from translator_controller import (initialize_axes,
                                    reverse_engine,
                                    shift_move,
                                    set_zero,
-                                   test_run)
+                                   test_run,
+                                   get_position,
+                                   move_to_coords)
 from pyximc_wrapper.pyximc import *
 from multiprocessing.pool import ThreadPool
 
@@ -36,7 +38,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_translator_btn.clicked.connect(self.connect_translator)
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
         self.step_across_value = 0.01
-        self.step_along_value = 10        
+        self.step_along_value = 1        
         self.step_across_beam.setText(str(self.step_across_value))
         self.step_along_beam.setText(str(self.step_along_value))
         self.step_across_beam.textChanged.connect(self.params_setter)
@@ -111,8 +113,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def params_setter(self):
         self.step_across_value = float(self.step_across_beam.text())
         self.step_along_value = float(self.step_along_beam.text())
-        self.info_field.appendPlainText(str(self.step_across_value))
-        self.info_field.appendPlainText(str(self.step_along_value))
     
     def reverse(self, axis):
         if axis == "X":
@@ -134,12 +134,32 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
-        for i in range(10):
-            self.update()
-            QtWidgets.QApplication.processEvents()
-            QtCore.QThread.msleep(2000) 
-            shift_move(self.device_x, 2, self.user_unit)
-            self.info_field.appendPlainText(self.get_point())
+        point_number = 1
+        with open("../" + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
+            file.write("N,Time,X_pos,Y_pos,Value")
+            for j in range(5):
+                for i in range(5):
+                    self.update()
+                    QtWidgets.QApplication.processEvents()
+                    shift_move(self.device_y, self.step_across_value, 
+                               self.user_unit)
+                    QtCore.QThread.msleep(5000) 
+                    power_value = self.get_point()
+                    x_pos, y_pos = get_position(self.device_x, 
+                                                self.device_y, 
+                                                self.user_unit)
+                    time_now = time.strftime("%M:%S", time.localtime())
+                    line = (str(point_number) + "," + time_now + "," + 
+                            str(x_pos) + "," + str(y_pos) + 
+                            "," + str(power_value))
+                    file.write(line)
+                    self.show_info(line)
+                    point_number += 1
+                move_to_coords(self.device_x, self.device_y, 
+                               (0,0), self.user_unit)
+                
+                shift_move(self.device_x, -(self.step_along_value) * (j + 1), 
+                           self.user_unit)
             
     
         
