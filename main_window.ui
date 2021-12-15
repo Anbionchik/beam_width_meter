@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="connect_translator_btn">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>60</y>
+      <x>440</x>
+      <y>20</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -30,8 +30,8 @@
    <widget class="QPushButton" name="connect_powermeter_btn">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>100</y>
+      <x>490</x>
+      <y>120</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -118,8 +118,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>640</x>
-      <y>100</y>
+      <x>630</x>
+      <y>120</y>
       <width>141</width>
       <height>41</height>
      </rect>
@@ -134,14 +134,94 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>640</x>
-      <y>60</y>
+      <x>580</x>
+      <y>20</y>
       <width>141</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>Отключить подвижку</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reverse_x_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>60</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Реверс X</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="x_test_run_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>60</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Тест X</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="reverse_y_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>60</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Реверс Y</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="y_test_run_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>60</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Тест Y</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="xy_change_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>90</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>X &lt;-&gt; Y</string>
     </property>
    </widget>
   </widget>

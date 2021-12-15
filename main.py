@@ -6,7 +6,7 @@ Created on Tue Dec 14 10:36:37 2021
 """
 import sys
 import os
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 import main_window
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
@@ -16,7 +16,8 @@ from translator_controller import (initialize_axes,
                                    movement_setter,
                                    reverse_engine,
                                    shift_move,
-                                   set_zero)
+                                   set_zero,
+                                   test_run)
 from pyximc_wrapper.pyximc import *
 from multiprocessing.pool import ThreadPool
 
@@ -42,7 +43,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_beam.textChanged.connect(self.params_setter)
         self.disconnect_powermeter_btn.clicked.connect(self.disconnect_powermeter)
         self.disconnect_translator_btn.clicked.connect(self.disconnect_translator)
-        
+        self.reverse_x_btn.clicked.connect(lambda: self.reverse("X"))
+        self.reverse_y_btn.clicked.connect(lambda: self.reverse("Y"))
+        self.x_test_run_btn.clicked.connect(lambda: self.test_run("X"))
+        self.y_test_run_btn.clicked.connect(lambda: self.test_run("Y"))
+        self.xy_change_btn.clicked.connect(self.change_axes)
+
         self.maestro_address = "192.168.77.77"
         self.maestro_port = 5000
         
@@ -80,6 +86,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         set_zero(self.device_x, self.device_y)
         self.show_info("Подвижка подключена")
         self.disconnect_translator_btn.setEnabled(True)
+        self.reverse_x_btn.setEnabled(True)
+        self.reverse_y_btn.setEnabled(True)
+        self.x_test_run_btn.setEnabled(True)
+        self.y_test_run_btn.setEnabled(True)
+        self.xy_change_btn.setEnabled(True)
         
     
     def disconnect_powermeter(self):
@@ -91,17 +102,45 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         close_axes(self.device_x, self.device_y)
         self.show_info("Подвижка отключена")
         self.disconnect_translator_btn.setEnabled(False)
+        self.reverse_x_btn.setEnabled(False)
+        self.reverse_y_btn.setEnabled(False)
+        self.x_test_run_btn.setEnabled(False)
+        self.y_test_run_btn.setEnabled(False)
+        self.xy_change_btn.setEnabled(False)
     
     def params_setter(self):
         self.step_across_value = float(self.step_across_beam.text())
         self.step_along_value = float(self.step_along_beam.text())
         self.info_field.appendPlainText(str(self.step_across_value))
         self.info_field.appendPlainText(str(self.step_along_value))
+    
+    def reverse(self, axis):
+        if axis == "X":
+            result = reverse_engine(self.device_x)
+            self.show_info("Двигатель X: " + result)
+        elif axis == "Y":
+            result = reverse_engine(self.device_y)
+            self.show_info("Двигатель Y: " + result)
+    
+    def test_run(self, axis):
+        if axis == "X":
+            test_run(self.device_x)
+        elif axis == "Y":
+            test_run(self.device_y)
+    
+    def change_axes(self):
+        self.device_x, self.device_y = self.device_y, self.device_x
+        self.show_info("Ось X -> Ось Y\nОсь Y -> Ось X")
+    
+    
     def execute_measurment(self):
         for i in range(10):
-             shift_move(self.device_x, 0.5, self.user_unit)
-             self.info_field.appendPlainText(self.get_point())
-             time.sleep(2)
+            self.update()
+            QtWidgets.QApplication.processEvents()
+            QtCore.QThread.msleep(2000) 
+            shift_move(self.device_x, 2, self.user_unit)
+            self.info_field.appendPlainText(self.get_point())
+            
     
         
 

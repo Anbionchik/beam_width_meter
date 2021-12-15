@@ -114,6 +114,7 @@ def set_zero(device_id_x, device_id_y):
     
 def shift_move(device_id, shift, calibration):
     lib.command_movr_calb(device_id, c_float(shift), byref(calibration))
+    lib.command_wait_for_stop(device_id, 100)
 
 def reverse_engine(device_id):
     eng = engine_settings_t()
@@ -134,10 +135,11 @@ def reverse_engine(device_id):
             else:
                 return 'Установка реверса не выполнена'
 
-def test_run(engine_id):
+def test_run(device_id):
     lib.command_left(device_id)
     time.sleep(2)
     lib.command_sstp(device_id)
+    time.sleep(2)
     lib.command_right(device_id)
     time.sleep(2)
     lib.command_sstp(device_id)
