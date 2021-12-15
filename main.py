@@ -12,8 +12,15 @@ from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from translator_controller import (initialize_axes, 
                                    close_axes, 
-                                   user_calibration)
+                                   user_calibration,
+                                   movement_setter,
+                                   reverse_engine,
+                                   shift_move,
+                                   set_zero)
 from pyximc_wrapper.pyximc import *
+from multiprocessing.pool import ThreadPool
+
+threadPool = ThreadPool(2)
 
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
@@ -59,14 +66,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.tcp_socket.send(str.encode("*CVU"))
         return bytes.decode(self.tcp_socket.recv(1024))
     
+    def move_to(self, device_x, device_y, position):
+        pass
+    
     def connect_translator(self):
         try:
-            self.device_x, self.device_y = initialize_axes()
-
+            self.device_x, self.device_y = initialize_axes()            
         except NameError:
             self.show_info("Не удалось подключиться к подвижке")
             return
+        movement_setter(self.device_x, self.device_y, 4000, 2000, 2000)
         self.user_unit = user_calibration()
+        set_zero(self.device_x, self.device_y)
         self.show_info("Подвижка подключена")
         self.disconnect_translator_btn.setEnabled(True)
         
@@ -87,7 +98,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.info_field.appendPlainText(str(self.step_across_value))
         self.info_field.appendPlainText(str(self.step_along_value))
     def execute_measurment(self):
-        self.info_field.appendPlainText(self.get_point())
+        for i in range(10):
+             shift_move(self.device_x, 0.5, self.user_unit)
+             self.info_field.appendPlainText(self.get_point())
+             time.sleep(2)
+    
+        
+
         
     def show_info(self, message):
         self.info_field.appendPlainText(message)

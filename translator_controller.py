@@ -111,3 +111,33 @@ def movement_setter(device_id_x, device_id_y, speed, accel, decel):
 def set_zero(device_id_x, device_id_y):
     lib.command_zero(device_id_x)
     lib.command_zero(device_id_y)
+    
+def shift_move(device_id, shift, calibration):
+    lib.command_movr_calb(device_id, c_float(shift), byref(calibration))
+
+def reverse_engine(device_id):
+    eng = engine_settings_t()
+    result = lib.get_engine_settings(device_id, byref(eng))
+    if result == Result.Ok:
+        if eng.EngineFlags & EngineFlags.ENGINE_REVERSE:
+            eng.EngineFlags = eng.EngineFlags ^ EngineFlags.ENGINE_REVERSE
+            result = lib.set_engine_settings(device_id, byref(eng))
+            if result == Result.Ok:
+                return "Реверс активирован"
+            else:
+                return 'Установка реверса не выполнена'
+        else:
+            eng.EngineFlags = eng.EngineFlags | EngineFlags.ENGINE_REVERSE
+            result = lib.set_engine_settings(device_id, byref(eng))
+            if result == Result.Ok:
+                return "Реверс инактивирован"
+            else:
+                return 'Установка реверса не выполнена'
+
+def test_run(engine_id):
+    lib.command_left(device_id)
+    time.sleep(2)
+    lib.command_sstp(device_id)
+    lib.command_right(device_id)
+    time.sleep(2)
+    lib.command_sstp(device_id)
