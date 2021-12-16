@@ -50,6 +50,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_test_run_btn.clicked.connect(lambda: self.test_run("X"))
         self.y_test_run_btn.clicked.connect(lambda: self.test_run("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
+        self.choose_folder_btn.clicked.connect(self.open_folder)
+        self.folder_name = "../"
+        self.info_field.setEnabled(True)
 
         self.maestro_address = "192.168.77.77"
         self.maestro_port = 5000
@@ -67,6 +70,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             in_data = bytes.decode(in_data)
             self.show_info("Измеритель мощности подключён: " + in_data)
             self.disconnect_powermeter_btn.setEnabled(True)
+            self.connect_powermeter_btn.setEnabled(False)
+            self.allow_to_measure()
         except timeout:
             self.show_info("Не удалось подключиться к измерителю мощности :(")
         
@@ -93,12 +98,24 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_test_run_btn.setEnabled(True)
         self.y_test_run_btn.setEnabled(True)
         self.xy_change_btn.setEnabled(True)
+        self.connect_translator_btn.setEnabled(False)
+        self.allow_to_measure()
+    
+    def allow_to_measure(self):
+        if (not self.connect_powermeter_btn.isEnabled() and
+            not self.connect_translator_btn.isEnabled()):
+            self.begin_measurment_btn.setEnabled(True)
+        else:
+            self.begin_measurment_btn.setEnabled(False)
+            
         
     
     def disconnect_powermeter(self):
         self.tcp_socket.close()
         self.show_info("Измеритель мощности отключён")
         self.disconnect_powermeter_btn.setEnabled(False)
+        self.connect_powermeter_btn.setEnabled(True)
+        self.allow_to_measure()
     
     def disconnect_translator(self):
         close_axes(self.device_x, self.device_y)
@@ -109,6 +126,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_test_run_btn.setEnabled(False)
         self.y_test_run_btn.setEnabled(False)
         self.xy_change_btn.setEnabled(False)
+        self.connect_translator_btn.setEnabled(True)
+        self.allow_to_measure()
     
     def params_setter(self):
         self.step_across_value = float(self.step_across_beam.text())
@@ -135,34 +154,42 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def execute_measurment(self):
         self.show_info("Начинаем измерение.")
+        coords = {"x" : 0, "y" : 0}
         point_number = 1
-        with open("../" + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
+        with open(self.folder_name + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
             for j in range(2):
                 for i in range(3):
                     self.update()
                     QtWidgets.QApplication.processEvents()
-                    shift_move(self.device_y, self.step_across_value, 
-                               self.user_unit)
+                    # shift_move(self.device_y, self.step_across_value, 
+                    #            self.user_unit)
+                    
+                    coords["x"] = -(self.step_along_value) * j
+                    coords["y"] = self.step_across_value * i
+                    
+                    move_to_coords(self.device_x, self.device_y, 
+                                   (coords["x"],coords["y"]), self.user_unit)
                     QtCore.QThread.msleep(5000) 
                     power_value = self.get_point()
                     x_pos, y_pos = map(round, get_position(self.device_x, 
                                                 self.device_y, 
-                                                self.user_unit), [2,2])
+                                                self.user_unit), [4,4])
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
                             str(x_pos) + "," + str(y_pos) + 
-                            "," + str(power_value)).replace("\r\n", "")
+                            "," + str(power_value)).replace("\n", "")
                     print(repr(line))
                     file.write(line)
-                    self.show_info(line.replace(",", " "))
+                    self.show_info(line.replace(",", " ").replace("\r", ""))
                     point_number += 1
-                move_to_coords(self.device_x, self.device_y, 
-                               (0,0), self.user_unit)
                 
-                shift_move(self.device_x, -(self.step_along_value) * (j + 1), 
-                           self.user_unit)
+                move_to_coords(self.device_x, self.device_y, 
+                               (-(self.step_along_value) * (j + 1),0), 
+                               self.user_unit)
+        self.show_info("Измерение завершено.")
+                
             
     
         
@@ -170,6 +197,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def show_info(self, message):
         self.info_field.appendPlainText(message)
+        
+    def open_folder(self):
+        
+        self.folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 
+                                                                 "Choose folder for results files",
+                                                                 options=QtWidgets.QFileDialog.ShowDirsOnly)
+        self.results_folder_path.setText(self.folder_name)
     
     
 

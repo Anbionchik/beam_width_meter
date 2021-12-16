@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="connect_translator_btn">
     <property name="geometry">
      <rect>
-      <x>440</x>
+      <x>490</x>
       <y>20</y>
       <width>141</width>
       <height>41</height>
@@ -41,6 +41,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="begin_measurment_btn">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>500</x>
@@ -99,19 +102,6 @@
      <string>Шаг вдоль пучка, мм</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="info_field">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>280</y>
-      <width>251</width>
-      <height>261</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="disconnect_powermeter_btn">
     <property name="enabled">
      <bool>false</bool>
@@ -134,7 +124,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>580</x>
+      <x>630</x>
       <y>20</y>
       <width>141</width>
       <height>41</height>
@@ -150,9 +140,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>430</x>
+      <x>490</x>
       <y>60</y>
-      <width>75</width>
+      <width>55</width>
       <height>23</height>
      </rect>
     </property>
@@ -166,9 +156,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>510</x>
+      <x>550</x>
       <y>60</y>
-      <width>75</width>
+      <width>55</width>
       <height>23</height>
      </rect>
     </property>
@@ -182,9 +172,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>590</x>
+      <x>670</x>
       <y>60</y>
-      <width>75</width>
+      <width>55</width>
       <height>23</height>
      </rect>
     </property>
@@ -198,9 +188,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>670</x>
+      <x>720</x>
       <y>60</y>
-      <width>75</width>
+      <width>55</width>
       <height>23</height>
      </rect>
     </property>
@@ -214,15 +204,79 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>90</y>
-      <width>75</width>
+      <x>610</x>
+      <y>60</y>
+      <width>57</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
      <string>X &lt;-&gt; Y</string>
     </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>291</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Путь сохранения</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="results_folder_path">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>50</y>
+      <width>441</width>
+      <height>21</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="choose_folder_btn">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>80</y>
+      <width>221</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Выбрать папку для сохранения</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>480</y>
+      <width>781</width>
+      <height>80</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QPlainTextEdit" name="info_field">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustToContents</enum>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

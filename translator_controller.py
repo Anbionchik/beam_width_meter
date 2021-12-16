@@ -113,7 +113,8 @@ def set_zero(device_id_x, device_id_y):
     lib.command_zero(device_id_y)
     
 def shift_move(device_id, shift, calibration):
-    lib.command_movr_calb(device_id, c_float(shift), byref(calibration))
+    shift = int(shift / calibration.A)
+    lib.command_movr(device_id, c_int(shift))
     lib.command_wait_for_stop(device_id, 100)
 
 def reverse_engine(device_id):
