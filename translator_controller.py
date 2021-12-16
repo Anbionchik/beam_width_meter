@@ -135,14 +135,11 @@ def reverse_engine(device_id):
             else:
                 return 'Установка реверса не выполнена'
 
-def test_run(device_id):
-    lib.command_left(device_id)
-    time.sleep(2)
-    lib.command_sstp(device_id)
-    time.sleep(2)
-    lib.command_right(device_id)
-    time.sleep(2)
-    lib.command_sstp(device_id)
+def test_run(device_id, calibration):
+    lib.command_movr_calb(device_id, c_float(2), byref(calibration))
+    lib.command_wait_for_stop(device_id, 100)
+    lib.command_movr_calb(device_id, c_float(-2), byref(calibration))
+    lib.command_wait_for_stop(device_id, 100)
     
 def get_position(device_id_x, device_id_y, user_unit):
     x_pos = get_position_calb_t()

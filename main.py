@@ -124,9 +124,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def test_run(self, axis):
         if axis == "X":
-            test_run(self.device_x)
+            test_run(self.device_x, self.user_unit)
         elif axis == "Y":
-            test_run(self.device_y)
+            test_run(self.device_y, self.user_unit)
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -134,26 +134,29 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
+        self.show_info("Начинаем измерение.")
         point_number = 1
         with open("../" + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
-            file.write("N,Time,X_pos,Y_pos,Value")
-            for j in range(5):
-                for i in range(5):
+            file.write("N,Time,X_pos,Y_pos,Value\r")
+            set_zero(self.device_x, self.device_y)
+            for j in range(2):
+                for i in range(3):
                     self.update()
                     QtWidgets.QApplication.processEvents()
                     shift_move(self.device_y, self.step_across_value, 
                                self.user_unit)
                     QtCore.QThread.msleep(5000) 
                     power_value = self.get_point()
-                    x_pos, y_pos = get_position(self.device_x, 
+                    x_pos, y_pos = map(round, get_position(self.device_x, 
                                                 self.device_y, 
-                                                self.user_unit)
+                                                self.user_unit), [2,2])
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
                             str(x_pos) + "," + str(y_pos) + 
-                            "," + str(power_value))
+                            "," + str(power_value)).replace("\r\n", "")
+                    print(repr(line))
                     file.write(line)
-                    self.show_info(line)
+                    self.show_info(line.replace(",", " "))
                     point_number += 1
                 move_to_coords(self.device_x, self.device_y, 
                                (0,0), self.user_unit)
