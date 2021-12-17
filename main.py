@@ -10,6 +10,8 @@ from PyQt5 import QtWidgets, QtCore
 import main_window
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
+from pyqtgraph import PlotWidget
+import pyqtgraph as pg
 from translator_controller import (initialize_axes, 
                                    close_axes, 
                                    user_calibration,
@@ -51,11 +53,30 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.y_test_run_btn.clicked.connect(lambda: self.test_run("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
+        
+        icon = self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon)
+        self.choose_folder_btn.setIcon(icon)
         self.folder_name = "../"
         self.info_field.setEnabled(True)
 
         self.maestro_address = "192.168.77.77"
         self.maestro_port = 5000
+        
+        
+        hour = [1,2,3,4,5,6,7,8,9,10]
+        temperature = [30,32,34,32,33,31,29,32,35,45]
+        self.main_graph_pen = pg.mkPen(color=(255, 0, 0), width=2)
+        self.main_graph.plot(hour, temperature, name="Сенсор 1", pen=self.main_graph_pen,
+                             symbol="o", symbolBrush="#00AA00", symbolSize=10)
+        self.main_graph.setBackground("#FFFFFF")
+        self.main_graph.setTitle("Основной график")
+        self.main_graph.setLabel('left', 'Ширина пучка, мкм')
+        self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
+        
+        
+        
+            
+        
         
     def connect_powermeter(self):
         
