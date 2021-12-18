@@ -12,6 +12,7 @@ from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
+from statistics import mean
 from translator_controller import (initialize_axes, 
                                    close_axes, 
                                    user_calibration,
@@ -27,6 +28,38 @@ from multiprocessing.pool import ThreadPool
 
 threadPool = ThreadPool(2)
 
+test_val_list = [-0.0003,
+0.002,
+0.0019,
+0.0001,
+0.0006,
+0.0013,
+0.0008,
+0.0046,
+0.0101,
+0.0216,
+0.0351,
+0.0539,
+0.0737,
+0.0916,
+0.1033,
+0.111,
+0.1117,
+0.1126,
+0.1141,
+0.1135,
+0.11136,
+0.1135,
+0.11136,
+0.1135,
+0.11136,
+0.1135,
+0.11136,
+0.1135,
+0.11136,
+0.1135,
+0.11136,
+]
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
 if not "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\" in os.environ["Path"]:
@@ -117,10 +150,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info("Не удалось подключиться к измерителю мощности :(")
         
     def get_point(self):
-        self.tcp_socket.send(str.encode("*CVU"))
-        answer = bytes.decode(self.tcp_socket.recv(1024))
-        self.power_list.append(answer)
-        return answer
+                
+        average_list = []
+        
+        for _ in range(5):
+            self.tcp_socket.send(str.encode("*CVU"))
+            answer = bytes.decode(self.tcp_socket.recv(1024))
+            average_list.append(float(answer))
+            QtCore.QThread.msleep(150)
+        
+        power_value = mean(average_list)
+        
+        return power_value
     
     def move_to(self, device_x, device_y, position):
         pass
@@ -209,7 +250,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                           symbolSize=4)
     
     def draw_power(self):
-        pass
+        self.line_graph.plot(self.local_coords_list, self.power_list, 
+                             pen=self.main_graph_pen,
+                             symbol="t", symbolBrush="#0000AA", symbolSize=2)
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -220,6 +263,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         wait_time = 3000 # в мс
         steps_across = 10
         steps_along = 5
+        threshold = 0.2
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
         point_number = 1
@@ -227,7 +271,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
             for j in range(steps_along):
+                
+                self.power_list = []
+                beam_start_point = None
+                beam_end_point = None
+                self.local_coords_list = []
+                
                 for i in range(steps_across):
+                    
+                    if not beam_end_point is None:
+                        if i - beam_end_point[0] > 5:
+                            break
+                    
                     self.update()
                     QtWidgets.QApplication.processEvents()
                     # shift_move(self.device_y, self.step_across_value, 
@@ -239,10 +294,25 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     move_to_coords(self.device_x, self.device_y, 
                                    (coords["x"],coords["y"]), self.user_unit)
                     QtCore.QThread.msleep(wait_time) 
-                    power_value = self.get_point()
+                    
+                    power_value = self.get_point()                    
+                    self.power_list.append(power_value)
+                    
                     x_pos, y_pos = map(round, get_position(self.device_x, 
                                                 self.device_y, 
                                                 self.user_unit), [4,4])
+                    
+                    self.local_coords_list.append(y_pos)
+                    
+                    if beam_start_point is None and len(self.power_list) > 1:
+                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value > threshold:
+                            beam_start_point = (i, x_pos)
+                    elif not beam_start_point is None:
+                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value < threshold:
+                            beam_end_point = (i, x_pos)
+                    
+                        
+                    self.draw_power()
                     self.draw_coords((x_pos, y_pos))
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
