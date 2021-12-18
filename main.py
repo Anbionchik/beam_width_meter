@@ -54,6 +54,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
         
+        
         icon = self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon)
         self.choose_folder_btn.setIcon(icon)
         self.folder_name = "../"
@@ -72,7 +73,26 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.setTitle("Основной график")
         self.main_graph.setLabel('left', 'Ширина пучка, мкм')
         self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
+        self.main_graph.addLegend()
         
+        
+        self.translator_coords_graph.setBackground("#FFFFFF")
+        self.translator_coords_graph.setTitle("Положение подвижки")
+        self.translator_coords_graph.setLabel('left', 'Y, мм')
+        self.translator_coords_graph.setLabel('bottom', 'X, мм')
+        
+        self.line_graph.setBackground("#FFFFFF")
+        self.line_graph.setTitle("Значение мощности")
+        self.line_graph.setLabel('left', 'P, W')
+        self.line_graph.setLabel('bottom', 'X, мм')
+        
+        self.gauss_graph.setBackground("#FFFFFF")
+        self.gauss_graph.setTitle("Производная мощности")
+        self.gauss_graph.setLabel('left', "P', мм")
+        self.gauss_graph.setLabel('bottom', 'X, мм')
+        
+        self.translator_move_history = [[],[]]    
+        self.power_list = []
         
         
             
@@ -98,7 +118,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def get_point(self):
         self.tcp_socket.send(str.encode("*CVU"))
-        return bytes.decode(self.tcp_socket.recv(1024))
+        answer = bytes.decode(self.tcp_socket.recv(1024))
+        self.power_list.append(answer)
+        return answer
     
     def move_to(self, device_x, device_y, position):
         pass
@@ -165,8 +187,29 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def test_run(self, axis):
         if axis == "X":
             test_run(self.device_x, self.user_unit)
+            self.draw_coords()
         elif axis == "Y":
             test_run(self.device_y, self.user_unit)
+            self.draw_coords()
+    
+    def draw_coords(self, coords=None):
+        if coords is None:
+            x_pos, y_pos = map(round, get_position(self.device_x, 
+                                        self.device_y, 
+                                        self.user_unit), [4,4])
+            self.translator_move_history[0].append(x_pos)
+            self.translator_move_history[1].append(y_pos)
+        else:
+            self.translator_move_history[0].append(coords[0])
+            self.translator_move_history[1].append(coords[1])
+        self.translator_coords_graph.plot(self.translator_move_history[0], 
+                                          self.translator_move_history[1],
+                                          pen=self.main_graph_pen,
+                                          symbol="o", symbolBrush="#00AA00", 
+                                          symbolSize=4)
+    
+    def draw_power(self):
+        pass
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -174,14 +217,17 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
+        wait_time = 3000 # в мс
+        steps_across = 10
+        steps_along = 5
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
         point_number = 1
         with open(self.folder_name + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
-            for j in range(2):
-                for i in range(3):
+            for j in range(steps_along):
+                for i in range(steps_across):
                     self.update()
                     QtWidgets.QApplication.processEvents()
                     # shift_move(self.device_y, self.step_across_value, 
@@ -192,11 +238,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     move_to_coords(self.device_x, self.device_y, 
                                    (coords["x"],coords["y"]), self.user_unit)
-                    QtCore.QThread.msleep(5000) 
+                    QtCore.QThread.msleep(wait_time) 
                     power_value = self.get_point()
                     x_pos, y_pos = map(round, get_position(self.device_x, 
                                                 self.device_y, 
                                                 self.user_unit), [4,4])
+                    self.draw_coords((x_pos, y_pos))
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
                             str(x_pos) + "," + str(y_pos) + 

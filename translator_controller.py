@@ -24,6 +24,8 @@ if sys.version_info >= (3,0):
 
 lib.set_bindy_key("pyximc_wrapper/keyfile.sqlite".encode("utf-8")) # Search for the key file in the current directory.
 
+translator_move_history = [[],[]]
+
 def initialize_axes():
     
     # This is device search and enumeration with probing. It gives more information about devices.
@@ -113,6 +115,7 @@ def set_zero(device_id_x, device_id_y):
     lib.command_zero(device_id_y)
     
 def shift_move(device_id, shift, calibration):
+    global translator_move_history
     shift = int(shift / calibration.A)
     lib.command_movr(device_id, c_int(shift))
     lib.command_wait_for_stop(device_id, 100)

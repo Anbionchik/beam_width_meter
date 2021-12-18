@@ -308,6 +308,16 @@
      </rect>
     </property>
    </widget>
+   <widget class="PlotWidget" name="translator_coords_graph" native="true">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>10</y>
+      <width>391</width>
+      <height>241</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
