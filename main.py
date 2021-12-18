@@ -25,6 +25,7 @@ from translator_controller import (initialize_axes,
                                    move_to_coords)
 from pyximc_wrapper.pyximc import *
 from multiprocessing.pool import ThreadPool
+from graph_fit import get_gauss_fit
 
 threadPool = ThreadPool(2)
 
@@ -249,10 +250,32 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                           symbol="o", symbolBrush="#00AA00", 
                                           symbolSize=4)
     
-    def draw_power(self):
-        self.line_graph.plot(self.local_coords_list, self.power_list, 
-                             pen=self.main_graph_pen,
-                             symbol="t", symbolBrush="#0000AA", symbolSize=2)
+    def draw_power(self, start_point, end_point):
+        if not start_point is None and start_point[0] > 7:
+            crds_list = self.local_coords_list[start_point[0] - 7:]
+            pwr_list = self.power_list[start_point[0] - 7:]
+            self.line_graph.clear()
+            self.line_graph.plot(crds_list, pwr_list, 
+                                 pen=self.main_graph_pen,
+                                 symbol="t", symbolBrush="#0000AA", 
+                                 symbolSize=2)
+        else:
+            self.line_graph.clear()
+            self.line_graph.plot(self.local_coords_list, self.power_list, 
+                                 pen=self.main_graph_pen,
+                                 symbol="t", symbolBrush="#0000AA", 
+                                 symbolSize=2)
+    def draw_gauss(self, start_point, end_point):
+        gauss_fit = get_gauss_fit(self.local_coords_list, self.power_list)
+        if gauss_fit is None:
+            pass
+        else:
+            self.gauss_graph.clear()
+            self.gauss_graph.plot(self.local_coords_list, gauss_fit, 
+                                 pen=self.main_graph_pen,
+                                 symbol="t", symbolBrush="#0000AA", 
+                                 symbolSize=2)
+    
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -261,26 +284,29 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def execute_measurment(self):
         wait_time = 3000 # в мс
-        steps_across = 10
-        steps_along = 5
-        threshold = 0.2
+        steps_across = 31
+        steps_along = 2
+        threshold = 0.3
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
         point_number = 1
         with open(self.folder_name + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
+            
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
+                        
             for j in range(steps_along):
                 
                 self.power_list = []
                 beam_start_point = None
                 beam_end_point = None
                 self.local_coords_list = []
+                self.gauss_graph.clear()
                 
                 for i in range(steps_across):
                     
                     if not beam_end_point is None:
-                        if i - beam_end_point[0] > 5:
+                        if i - beam_end_point[0] > 7:
                             break
                     
                     self.update()
@@ -295,7 +321,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                    (coords["x"],coords["y"]), self.user_unit)
                     QtCore.QThread.msleep(wait_time) 
                     
-                    power_value = self.get_point()                    
+                    # power_value = self.get_point()                    
+                    power_value = test_val_list[i]
                     self.power_list.append(power_value)
                     
                     x_pos, y_pos = map(round, get_position(self.device_x, 
@@ -304,15 +331,19 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     self.local_coords_list.append(y_pos)
                     
-                    if beam_start_point is None and len(self.power_list) > 1:
+                    if beam_start_point is None and len(self.power_list) > 2:
                         if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value > threshold:
-                            beam_start_point = (i, x_pos)
-                    elif not beam_start_point is None:
+                            beam_start_point = (i, y_pos)
+                            print(beam_start_point)
+                    elif not beam_start_point is None and beam_end_point is None:
                         if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value < threshold:
-                            beam_end_point = (i, x_pos)
+                            beam_end_point = (i, y_pos)
+                            print(beam_end_point)
                     
+                    if i > 1:
+                        self.draw_gauss(beam_start_point, beam_end_point)
                         
-                    self.draw_power()
+                    self.draw_power(beam_start_point, beam_end_point)
                     self.draw_coords((x_pos, y_pos))
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
