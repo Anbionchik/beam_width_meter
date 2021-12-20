@@ -17,49 +17,57 @@ from translator_controller import (initialize_axes,
                                    close_axes, 
                                    user_calibration,
                                    movement_setter,
-                                   reverse_engine,
-                                   shift_move,
+                                   reverse_engine,                                   
                                    set_zero,
                                    test_run,
                                    get_position,
                                    move_to_coords)
 from pyximc_wrapper.pyximc import *
 from multiprocessing.pool import ThreadPool
-from graph_fit import get_gauss_fit
+from graph_fit import get_gauss_fit, find_intersection
+import numpy as np
 
 threadPool = ThreadPool(2)
 
 test_val_list = [-0.0003,
-0.002,
-0.0019,
-0.0001,
-0.0006,
-0.0013,
-0.0008,
-0.0046,
-0.0101,
-0.0216,
-0.0351,
-0.0539,
-0.0737,
-0.0916,
-0.1033,
-0.111,
-0.1117,
-0.1126,
-0.1141,
-0.1135,
-0.11136,
-0.1135,
-0.11136,
-0.1135,
-0.11136,
-0.1135,
-0.11136,
-0.1135,
-0.11136,
-0.1135,
-0.11136,
+                 0.002,
+                 0.002,
+                 0.002,
+                 0.002,
+                 0.002,
+                 0.002,
+                 0.002,
+                 0.002,
+                    0.002,
+                    0.0019,
+                    0.0001,
+                    0.0006,
+                    0.0013,
+                    0.0008,
+                    0.0046,
+                    0.0101,
+                    0.0216,
+                    0.0351,
+                    0.0539,
+                    0.0737,
+                    0.0916,
+                    0.1033,
+                    0.111,
+                    0.1117,
+                    0.1126,
+                    0.1141,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
 ]
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
@@ -74,7 +82,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_translator_btn.clicked.connect(self.connect_translator)
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
         self.step_across_value = 0.01
-        self.step_along_value = 1        
+        self.step_along_value = 1  
+        self.threshold_line.setText('0.137')
         self.step_across_beam.setText(str(self.step_across_value))
         self.step_along_beam.setText(str(self.step_along_value))
         self.step_across_beam.textChanged.connect(self.params_setter)
@@ -103,7 +112,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph_pen = pg.mkPen(color=(255, 0, 0), width=2)
         self.main_graph.plot(hour, temperature, name="Сенсор 1", pen=self.main_graph_pen,
                              symbol="o", symbolBrush="#00AA00", symbolSize=10)
-        self.main_graph.setBackground("#FFFFFF")
+        self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
         self.main_graph.setLabel('left', 'Ширина пучка, мкм')
         self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
@@ -134,15 +143,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def connect_powermeter(self):
         
-        addr = (self.maestro_address, self.maestro_port)
-        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
-        self.tcp_socket.settimeout(4.0)
-        self.tcp_socket.connect(addr)
+        # addr = (self.maestro_address, self.maestro_port)
+        # self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        # self.tcp_socket.settimeout(4.0)
+        # self.tcp_socket.connect(addr)
         try:
-            out_data = str.encode("*VER")
-            self.tcp_socket.send(out_data)
-            in_data = self.tcp_socket.recv(1024)
-            in_data = bytes.decode(in_data)
+            # out_data = str.encode("*VER")
+            # self.tcp_socket.send(out_data)
+            # in_data = self.tcp_socket.recv(1024)
+            # in_data = bytes.decode(in_data)
+            in_data = "Фантомный маэстро"
             self.show_info("Измеритель мощности подключён: " + in_data)
             self.disconnect_powermeter_btn.setEnabled(True)
             self.connect_powermeter_btn.setEnabled(False)
@@ -196,7 +206,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     
     def disconnect_powermeter(self):
-        self.tcp_socket.close()
+        # self.tcp_socket.close()
         self.show_info("Измеритель мощности отключён")
         self.disconnect_powermeter_btn.setEnabled(False)
         self.connect_powermeter_btn.setEnabled(True)
@@ -266,26 +276,57 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                  symbol="t", symbolBrush="#0000AA", 
                                  symbolSize=2)
     def draw_gauss(self, start_point, end_point):
-        gauss_fit = get_gauss_fit(self.local_coords_list, self.power_list)
+        gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
+        
+        if not start_point is None and start_point[0] > 7:
+            crds_list = self.local_coords_list[start_point[0] - 7:]
+            y_list = y[start_point[0] - 7:]
+            if gauss_fit is not None:
+                gauss_list = gauss_fit[start_point[0] - 7:]
+        else:
+            crds_list = self.local_coords_list[:]            
+            y_list = y[:]
+            if gauss_fit is not None:
+                gauss_list = gauss_fit[:]
+        
         if gauss_fit is None:
-            pass
+            self.gauss_graph.clear()
+            self.gauss_graph.plot(crds_list, y_list, pen=None, 
+                                 symbol="o", symbolBrush="#0000AA", 
+                                 symbolSize=4)
         else:
             self.gauss_graph.clear()
-            self.gauss_graph.plot(self.local_coords_list, gauss_fit, 
+            self.gauss_graph.plot(crds_list, gauss_list, 
                                  pen=self.main_graph_pen,
                                  symbol="t", symbolBrush="#0000AA", 
                                  symbolSize=2)
-    
-    
+            self.gauss_graph.plot(crds_list, y_list, pen=None, 
+                                 symbol="o", symbolBrush="#0000AA", 
+                                 symbolSize=4)
+        if not end_point is None:
+            self.find_diameter(self.local_coords_list, gauss_fit)
+        
+    def find_diameter(self, x, gauss_fit):
+        threshold = float(self.threshold_line.text())
+        gauss_max = gauss_fit.max()
+        threshold_curve = np.full(len(x), gauss_max * threshold)
+        
+        intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
+        self.gauss_graph.plot(*intersection_list, pen=None,
+                              symbol='x', symbolBrush="AA00AA",
+                              symbolSize=6)
+        if len(intersection_list) == 2:
+            diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 2)
+            self.diameter_line.setText(str(diameter))
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
         self.show_info("Ось X -> Ось Y\nОсь Y -> Ось X")
     
     
     def execute_measurment(self):
-        wait_time = 3000 # в мс
-        steps_across = 31
-        steps_along = 2
+        wait_time = 1000 # в мс
+        steps_across = 38
+        steps_along = 1
         threshold = 0.3
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
@@ -323,6 +364,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     # power_value = self.get_point()                    
                     power_value = test_val_list[i]
+                    
                     self.power_list.append(power_value)
                     
                     x_pos, y_pos = map(round, get_position(self.device_x, 
