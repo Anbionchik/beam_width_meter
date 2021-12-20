@@ -26,6 +26,7 @@ from pyximc_wrapper.pyximc import *
 from multiprocessing.pool import ThreadPool
 from graph_fit import get_gauss_fit, find_intersection
 import numpy as np
+from statistics import stdev
 
 threadPool = ThreadPool(2)
 
@@ -83,11 +84,29 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
         self.step_across_value = 0.01
         self.step_along_value = 1  
+        self.wait_time = 1000 # в мс
+        self.beam_threshold = 0.3
+        self.steps_across = 38
+        self.steps_along = 1
+        
+        
         self.threshold_line.setText('0.137')
         self.step_across_beam.setText(str(self.step_across_value))
         self.step_along_beam.setText(str(self.step_along_value))
-        self.step_across_beam.textChanged.connect(self.params_setter)
-        self.step_along_beam.textChanged.connect(self.params_setter)
+        self.step_across_beam_n.setText(str(self.steps_across))
+        self.step_along_beam_n.setText(str(self.steps_along))
+        self.label_n_across.setText(str(self.steps_across * 
+                                        self.step_across_value))
+        self.label_n_along.setText(str(self.steps_along * 
+                                       self.step_along_value))
+        
+        # self.step_across_beam.textChanged.connect(self.params_setter)
+        # self.step_along_beam.textChanged.connect(self.params_setter)
+        # self.step_across_beam_n.textChanged.connect(self.params_setter)
+        # self.step_along_beam_n.textChanged.connect(self.params_setter)
+        
+        
+        
         self.disconnect_powermeter_btn.clicked.connect(self.disconnect_powermeter)
         self.disconnect_translator_btn.clicked.connect(self.disconnect_translator)
         self.reverse_x_btn.clicked.connect(lambda: self.reverse("X"))
@@ -106,12 +125,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.maestro_address = "192.168.77.77"
         self.maestro_port = 5000
         
+        # Ручки для оформления графиков
+        self.main_graph_pen = pg.mkPen(color=(229,43,80), width=2)
+        self.yellow_pen = pg.mkPen(color=(255,220,51), width=2)
+        self.green_pen = pg.mkPen(color=(68,148,74), width=2)
+        self.purple_pen = pg.mkPen(color=(222,76,138), width = 2)
+        
         
         hour = [1,2,3,4,5,6,7,8,9,10]
         temperature = [30,32,34,32,33,31,29,32,35,45]
-        self.main_graph_pen = pg.mkPen(color=(255, 0, 0), width=2)
+                
         self.main_graph.plot(hour, temperature, name="Сенсор 1", pen=self.main_graph_pen,
-                             symbol="o", symbolBrush="#00AA00", symbolSize=10)
+                             symbol="o", symbolBrush="#44944A", symbolSize=7)
         self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
         self.main_graph.setLabel('left', 'Ширина пучка, мкм')
@@ -119,17 +144,17 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.addLegend()
         
         
-        self.translator_coords_graph.setBackground("#FFFFFF")
+        self.translator_coords_graph.setBackground("#293133")
         self.translator_coords_graph.setTitle("Положение подвижки")
         self.translator_coords_graph.setLabel('left', 'Y, мм')
         self.translator_coords_graph.setLabel('bottom', 'X, мм')
         
-        self.line_graph.setBackground("#FFFFFF")
+        self.line_graph.setBackground("#293133")
         self.line_graph.setTitle("Значение мощности")
         self.line_graph.setLabel('left', 'P, W')
         self.line_graph.setLabel('bottom', 'X, мм')
         
-        self.gauss_graph.setBackground("#FFFFFF")
+        self.gauss_graph.setBackground("#293133")
         self.gauss_graph.setTitle("Производная мощности")
         self.gauss_graph.setLabel('left', "P', мм")
         self.gauss_graph.setLabel('bottom', 'X, мм')
@@ -169,10 +194,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             answer = bytes.decode(self.tcp_socket.recv(1024))
             average_list.append(float(answer))
             QtCore.QThread.msleep(150)
+            
         
         power_value = mean(average_list)
         
-        return power_value
+        st_otkl = stdev(average_list)
+        
+        if st_otkl / power_value > 0.5:
+            return None
+        else:
+            return power_value
     
     def move_to(self, device_x, device_y, position):
         pass
@@ -227,6 +258,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def params_setter(self):
         self.step_across_value = float(self.step_across_beam.text())
         self.step_along_value = float(self.step_along_beam.text())
+        self.steps_across = int(self.step_across_beam_n.text())
+        self.steps_along = int(self.step_along_beam_n.text())
+        self.label_n_across.setText(str(self.steps_across * 
+                                        self.step_across_value))
+        self.label_n_along.setText(str(self.steps_along * 
+                                       self.step_along_value))
     
     def reverse(self, axis):
         if axis == "X":
@@ -256,9 +293,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.translator_move_history[1].append(coords[1])
         self.translator_coords_graph.plot(self.translator_move_history[0], 
                                           self.translator_move_history[1],
-                                          pen=self.main_graph_pen,
-                                          symbol="o", symbolBrush="#00AA00", 
-                                          symbolSize=4)
+                                          pen=self.green_pen,
+                                          symbol="o", symbolBrush="#6A5ACD", 
+                                          symbolSize=3)
     
     def draw_power(self, start_point, end_point):
         if not start_point is None and start_point[0] > 7:
@@ -266,15 +303,17 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             pwr_list = self.power_list[start_point[0] - 7:]
             self.line_graph.clear()
             self.line_graph.plot(crds_list, pwr_list, 
-                                 pen=self.main_graph_pen,
-                                 symbol="t", symbolBrush="#0000AA", 
+                                 pen=self.yellow_pen,
+                                 symbol="t", symbolBrush="#6A5ACD", 
                                  symbolSize=2)
         else:
             self.line_graph.clear()
             self.line_graph.plot(self.local_coords_list, self.power_list, 
-                                 pen=self.main_graph_pen,
-                                 symbol="t", symbolBrush="#0000AA", 
+                                 pen=self.yellow_pen,
+                                 symbol="t", symbolBrush="#6A5ACD", 
                                  symbolSize=2)
+    
+    
     def draw_gauss(self, start_point, end_point):
         gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
         
@@ -297,7 +336,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         else:
             self.gauss_graph.clear()
             self.gauss_graph.plot(crds_list, gauss_list, 
-                                 pen=self.main_graph_pen,
+                                 pen=self.purple_pen,
                                  symbol="t", symbolBrush="#0000AA", 
                                  symbolSize=2)
             self.gauss_graph.plot(crds_list, y_list, pen=None, 
@@ -313,9 +352,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
         self.gauss_graph.plot(*intersection_list, pen=None,
-                              symbol='x', symbolBrush="AA00AA",
-                              symbolSize=6)
-        if len(intersection_list) == 2:
+                              symbol='x', symbolBrush="7CFC00",
+                              symbolSize=8)
+        if len(intersection_list[0]) == 2:
             diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 2)
             self.diameter_line.setText(str(diameter))
     def change_axes(self):
@@ -324,10 +363,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
-        wait_time = 1000 # в мс
-        steps_across = 38
-        steps_along = 1
-        threshold = 0.3
+        
+        self.params_setter()
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
         point_number = 1
@@ -336,7 +373,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
                         
-            for j in range(steps_along):
+            for j in range(self.steps_along):
                 
                 self.power_list = []
                 beam_start_point = None
@@ -344,7 +381,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.local_coords_list = []
                 self.gauss_graph.clear()
                 
-                for i in range(steps_across):
+                for i in range(self.steps_across):
                     
                     if not beam_end_point is None:
                         if i - beam_end_point[0] > 7:
@@ -360,10 +397,14 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     move_to_coords(self.device_x, self.device_y, 
                                    (coords["x"],coords["y"]), self.user_unit)
-                    QtCore.QThread.msleep(wait_time) 
+                    QtCore.QThread.msleep(self.wait_time) 
                     
-                    # power_value = self.get_point()                    
-                    power_value = test_val_list[i]
+                    power_value = None
+                    while power_value is None:                        
+                        # power_value = self.get_point()                    
+                        power_value = test_val_list[i]
+                        if power_value is None:
+                            self.show_info("Повторный запрос значения мощности")
                     
                     self.power_list.append(power_value)
                     
@@ -374,11 +415,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.local_coords_list.append(y_pos)
                     
                     if beam_start_point is None and len(self.power_list) > 2:
-                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value > threshold:
+                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value > self.beam_threshold:
                             beam_start_point = (i, y_pos)
                             print(beam_start_point)
                     elif not beam_start_point is None and beam_end_point is None:
-                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value < threshold:
+                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value < self.beam_threshold:
                             beam_end_point = (i, y_pos)
                             print(beam_end_point)
                     
@@ -396,6 +437,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.show_info(line.replace(",", " ").replace("\r", ""))
                     point_number += 1
                 
+                self.diameter_line.clear()
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
@@ -415,6 +457,14 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                                                  "Choose folder for results files",
                                                                  options=QtWidgets.QFileDialog.ShowDirsOnly)
         self.results_folder_path.setText(self.folder_name)
+        
+    def closeEvent(self, event):
+        if self.disconnect_powermeter_btn.isEnabled():
+            self.disconnect_powermeter()
+        if self.disconnect_translator_btn.isEnabled():
+            self.disconnect_translator()
+        event.accept() # let the window close
+
     
     
 
