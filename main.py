@@ -99,10 +99,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_beam.setText(str(self.step_along_value))
         self.step_across_beam_n.setText(str(self.steps_across))
         self.step_along_beam_n.setText(str(self.steps_along))
-        self.label_n_across.setText(str(self.steps_across * 
-                                        self.step_across_value))
-        self.label_n_along.setText(str(self.steps_along * 
-                                       self.step_along_value))
+        self.params_calculator()
         
         self.step_across_beam.textChanged.connect(self.params_calculator)
         self.step_along_beam.textChanged.connect(self.params_calculator)
@@ -115,12 +112,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.disconnect_translator_btn.clicked.connect(self.disconnect_translator)
         self.reverse_x_btn.clicked.connect(lambda: self.reverse("X"))
         self.reverse_y_btn.clicked.connect(lambda: self.reverse("Y"))
-        self.x_test_run_btn.clicked.connect(lambda: self.test_run("X"))
-        self.y_test_run_btn.clicked.connect(lambda: self.test_run("Y"))
         self.move_x_btn.clicked.connect(lambda: self.move_axis("X"))
         self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
+        
         
         
         icon = self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon)
@@ -245,9 +241,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.disconnect_translator_btn.setEnabled(True)
         self.reverse_x_btn.setEnabled(True)
         self.reverse_y_btn.setEnabled(True)
-        self.x_test_run_btn.setEnabled(True)
-        self.y_test_run_btn.setEnabled(True)
         self.xy_change_btn.setEnabled(True)
+        self.move_x_btn.setEnabled(True)
+        self.move_y_btn.setEnabled(True)
         self.connect_translator_btn.setEnabled(False)
         self.allow_to_measure()
     
@@ -273,9 +269,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.disconnect_translator_btn.setEnabled(False)
         self.reverse_x_btn.setEnabled(False)
         self.reverse_y_btn.setEnabled(False)
-        self.x_test_run_btn.setEnabled(False)
-        self.y_test_run_btn.setEnabled(False)
         self.xy_change_btn.setEnabled(False)
+        self.move_x_btn.setEnabled(False)
+        self.move_y_btn.setEnabled(False)
         self.connect_translator_btn.setEnabled(True)
         self.allow_to_measure()
     
@@ -291,8 +287,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                float(self.step_across_beam.text()), 2)
             lab_along = round(int(self.step_along_beam_n.text()) * 
                               float(self.step_along_beam.text()) , 2)
-            self.label_n_across.setText(str(lab_across))
-            self.label_n_along.setText(str(lab_along))
+            self.label_n_across.setText("Всего {} мм".format(lab_across))
+            self.label_n_along.setText("Всего {} мм".format(lab_along))
         except ValueError:
             pass
         
