@@ -30,45 +30,80 @@ from statistics import stdev
 
 threadPool = ThreadPool(2)
 
+# test_val_list = [-0.0003,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                  0.002,
+#                     0.002,
+#                     0.0019,
+#                     0.0001,
+#                     0.0006,
+#                     0.0013,
+#                     0.0008,
+#                     0.0046,
+#                     0.0101,
+#                     0.0216,
+#                     0.0351,
+#                     0.0539,
+#                     0.0737,
+#                     0.0916,
+#                     0.1033,
+#                     0.111,
+#                     0.1117,
+#                     0.1126,
+#                     0.1141,
+#                     0.1135,
+#                     0.11136,
+#                     0.1135,
+#                     0.11136,
+#                     0.1135,
+#                     0.11136,
+#                     0.1135,
+#                     0.11136,
+#                     0.1135,
+#                     0.11136,
+#                     0.1135,
+#                     0.11136,
+# ]
+
 test_val_list = [-0.0003,
-                 0.002,
-                 0.002,
-                 0.002,
-                 0.002,
-                 0.002,
-                 0.002,
-                 0.002,
-                 0.002,
-                    0.002,
-                    0.0019,
-                    0.0001,
-                    0.0006,
-                    0.0013,
-                    0.0008,
-                    0.0046,
-                    0.0101,
-                    0.0216,
-                    0.0351,
-                    0.0539,
-                    0.0737,
-                    0.0916,
-                    0.1033,
-                    0.111,
-                    0.1117,
-                    0.1126,
-                    0.1141,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
+                  0.002,
 ]
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
@@ -134,11 +169,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.purple_pen = pg.mkPen(color=(222,76,138), width = 2)
         
         
-        hour = [1,2,3,4,5,6,7,8,9,10]
-        temperature = [30,32,34,32,33,31,29,32,35,45]
-                
-        self.main_graph.plot(hour, temperature, name="Сенсор 1", pen=self.main_graph_pen,
-                             symbol="o", symbolBrush="#44944A", symbolSize=7)
+        
         self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
         self.main_graph.setLabel('left', 'Ширина пучка, мкм')
@@ -376,8 +407,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                               symbol='x', symbolBrush="7CFC00",
                               symbolSize=8)
         if len(intersection_list[0]) == 2:
-            diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 2)
+            diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
             self.diameter_line.setText(str(diameter))
+    
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
         self.show_info("Ось X -> Ось Y\nОсь Y -> Ось X")
@@ -407,7 +439,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 for i in range(self.steps_across):
                     
                     if not beam_end_point is None:
-                        if i - beam_end_point[0] > 7:
+                        if i - beam_end_point[0] > 10:
                             break
                     
                     self.update()
@@ -442,7 +474,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                             beam_start_point = (i, y_pos)
                             print(beam_start_point)
                     elif not beam_start_point is None and beam_end_point is None:
-                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value < self.beam_threshold:
+                        if (((self.power_list[-1] - self.power_list[-2]) / 
+                            self.step_across_value < self.beam_threshold) or
+                        (self.steps_across - i < 10)):
+                            
                             beam_end_point = (i, y_pos)
                             print(beam_end_point)
                     
@@ -467,8 +502,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
                                      pen=self.main_graph_pen, symbol="o", 
                                      symbolBrush="#44944A", symbolSize=7)
-                self.main_graph.setYRange(0, max(self.diameters_list))
+                try:
+                    self.main_graph.setYRange(0, max(self.diameters_list) * 1.2)
+                except ValueError:
+                    pass
                 self.diameter_line.clear()
+                
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
