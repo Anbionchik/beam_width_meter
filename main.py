@@ -30,47 +30,6 @@ from statistics import stdev
 
 threadPool = ThreadPool(2)
 
-# test_val_list = [-0.0003,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                  0.002,
-#                     0.002,
-#                     0.0019,
-#                     0.0001,
-#                     0.0006,
-#                     0.0013,
-#                     0.0008,
-#                     0.0046,
-#                     0.0101,
-#                     0.0216,
-#                     0.0351,
-#                     0.0539,
-#                     0.0737,
-#                     0.0916,
-#                     0.1033,
-#                     0.111,
-#                     0.1117,
-#                     0.1126,
-#                     0.1141,
-#                     0.1135,
-#                     0.11136,
-#                     0.1135,
-#                     0.11136,
-#                     0.1135,
-#                     0.11136,
-#                     0.1135,
-#                     0.11136,
-#                     0.1135,
-#                     0.11136,
-#                     0.1135,
-#                     0.11136,
-# ]
-
 test_val_list = [-0.0003,
                   0.002,
                   0.002,
@@ -80,31 +39,39 @@ test_val_list = [-0.0003,
                   0.002,
                   0.002,
                   0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
+                    0.002,
+                    0.0019,
+                    0.0001,
+                    0.0006,
+                    0.0013,
+                    0.0008,
+                    0.0046,
+                    0.0101,
+                    0.0216,
+                    0.0351,
+                    0.0539,
+                    0.0737,
+                    0.0916,
+                    0.1033,
+                    0.111,
+                    0.1117,
+                    0.1126,
+                    0.1141,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
+                    0.1135,
+                    0.11136,
 ]
+
+
 
 dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
 if not "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\" in os.environ["Path"]:
@@ -157,6 +124,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         icon = self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon)
         self.choose_folder_btn.setIcon(icon)
         self.folder_name = "../"
+        self.results_folder_path.setText(self.folder_name)
         self.info_field.setEnabled(True)
 
         self.maestro_address = "192.168.77.77"
@@ -260,7 +228,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         except NameError:
             self.show_info("Не удалось подключиться к подвижке")
             return
-        movement_setter(self.device_x, self.device_y, 4000, 2000, 2000)
+        movement_setter(self.device_x, self.device_y, 4000, 2000, 4000)
         self.user_unit = user_calibration()
         set_zero(self.device_x, self.device_y)
         self.show_info("Подвижка подключена")
@@ -309,10 +277,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def params_calculator(self):
         try:
-            self.label_n_across.setText(str(int(self.step_across_beam_n.text()) * 
-                                            float(self.step_across_beam.text())))
-            self.label_n_along.setText(str(int(self.step_along_beam_n.text()) * 
-                                           float(self.step_along_beam.text())))
+            lab_across = round(int(self.step_across_beam_n.text()) * 
+                               float(self.step_across_beam.text()), 2)
+            lab_along = round(int(self.step_along_beam_n.text()) * 
+                              float(self.step_along_beam.text()) , 2)
+            self.label_n_across.setText(str(lab_across))
+            self.label_n_along.setText(str(lab_along))
         except ValueError:
             pass
         
@@ -421,9 +391,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.clear()
         self.translator_coords_graph.clear()
         self.show_info("Начинаем измерение.")
+        time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
         point_number = 1
-        with open(self.folder_name + time.strftime("%d.%m.%y %H_%M_%S", time.localtime()) + " Results.csv", "w") as file:
+        with open(self.folder_name + time_file_name + " raw_results.csv", "w") as file:
             
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
@@ -489,9 +460,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
                             str(x_pos) + "," + str(y_pos) + 
-                            "," + str(power_value)).replace("\n", "")
+                            "," + str(power_value)).replace("\r\n", "")
                     print(repr(line))
-                    file.write(line)
+                    file.write(line + '\r')
                     self.show_info(line.replace(",", " ").replace("\r", ""))
                     point_number += 1
                 
@@ -512,6 +483,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
+        with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
+            file.write("N,X_pos,Diameter\r")
+            for rec in range(len(self.diameters_list)):
+                file.write("{},{},{}\r".format(str(rec), 
+                                               str(self.x_coords_list[rec]),
+                                               str(self.diameters_list[rec])))
         self.show_info("Измерение завершено.")
                 
             
