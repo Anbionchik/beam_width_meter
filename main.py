@@ -88,6 +88,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
+        self.diameters_list = []
+        self.x_coords_list = []
         
         
         self.threshold_line.setText('0.137')
@@ -100,10 +102,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.label_n_along.setText(str(self.steps_along * 
                                        self.step_along_value))
         
-        # self.step_across_beam.textChanged.connect(self.params_setter)
-        # self.step_along_beam.textChanged.connect(self.params_setter)
-        # self.step_across_beam_n.textChanged.connect(self.params_setter)
-        # self.step_along_beam_n.textChanged.connect(self.params_setter)
+        self.step_across_beam.textChanged.connect(self.params_calculator)
+        self.step_along_beam.textChanged.connect(self.params_calculator)
+        self.step_across_beam_n.textChanged.connect(self.params_calculator)
+        self.step_along_beam_n.textChanged.connect(self.params_calculator)
         
         
         
@@ -186,7 +188,20 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info("Не удалось подключиться к измерителю мощности :(")
         
     def get_point(self):
-                
+        
+        """
+        Делается запрос 5 точек от измерителя с паузой в 150 мс, затем 
+        высчитывается станадартное отклонение и среднее. Если 
+        ст.откл/среднее > threshold_value. То возвращается None, в противном 
+        случае среднее.
+
+        Returns
+        -------
+        power_value : float.
+
+        """
+        threshold_value = 0.5        
+        
         average_list = []
         
         for _ in range(5):
@@ -200,7 +215,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         st_otkl = stdev(average_list)
         
-        if st_otkl / power_value > 0.5:
+        if st_otkl / power_value > threshold_value:
             return None
         else:
             return power_value
@@ -260,10 +275,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_value = float(self.step_along_beam.text())
         self.steps_across = int(self.step_across_beam_n.text())
         self.steps_along = int(self.step_along_beam_n.text())
-        self.label_n_across.setText(str(self.steps_across * 
-                                        self.step_across_value))
-        self.label_n_along.setText(str(self.steps_along * 
-                                       self.step_along_value))
+        
+    def params_calculator(self):
+        try:
+            self.label_n_across.setText(str(int(self.step_across_beam_n.text()) * 
+                                            float(self.step_across_beam.text())))
+            self.label_n_along.setText(str(int(self.step_along_beam_n.text()) * 
+                                           float(self.step_along_beam.text())))
+        except ValueError:
+            pass
+        
     
     def reverse(self, axis):
         if axis == "X":
@@ -365,6 +386,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def execute_measurment(self):
         
         self.params_setter()
+        self.main_graph.clear()
+        self.translator_coords_graph.clear()
         self.show_info("Начинаем измерение.")
         coords = {"x" : 0, "y" : 0}
         point_number = 1
@@ -437,10 +460,19 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.show_info(line.replace(",", " ").replace("\r", ""))
                     point_number += 1
                 
+                if self.diameter_line.text() != "":
+                    self.diameters_list.append(float(self.diameter_line.text()))
+                    self.x_coords_list.append(x_pos)
+                
+                self.main_graph.plot(self.x_coords_list, self.diameters_list, 
+                                     pen=self.main_graph_pen, symbol="o", 
+                                     symbolBrush="#44944A", symbolSize=7)
+                
                 self.diameter_line.clear()
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
+        move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         self.show_info("Измерение завершено.")
                 
             
