@@ -467,7 +467,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
                                      pen=self.main_graph_pen, symbol="o", 
                                      symbolBrush="#44944A", symbolSize=7)
-                
+                self.main_graph.setYRange(0, max(self.diameters_list))
                 self.diameter_line.clear()
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
