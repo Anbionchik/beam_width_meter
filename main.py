@@ -21,14 +21,14 @@ from translator_controller import (initialize_axes,
                                    set_zero,
                                    test_run,
                                    get_position,
-                                   move_to_coords)
+                                   move_to_coords,
+                                   shift_move)
 from pyximc_wrapper.pyximc import *
-from multiprocessing.pool import ThreadPool
 from graph_fit import get_gauss_fit, find_intersection
 import numpy as np
 from statistics import stdev
 
-threadPool = ThreadPool(2)
+
 
 test_val_list = [-0.0003,
                   0.002,
@@ -117,6 +117,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.reverse_y_btn.clicked.connect(lambda: self.reverse("Y"))
         self.x_test_run_btn.clicked.connect(lambda: self.test_run("X"))
         self.y_test_run_btn.clicked.connect(lambda: self.test_run("Y"))
+        self.move_x_btn.clicked.connect(lambda: self.move_axis("X"))
+        self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
         
@@ -219,8 +221,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         else:
             return power_value
     
-    def move_to(self, device_x, device_y, position):
-        pass
+    def move_axis(self, axis):
+        try:
+            if axis == "X":
+                shift_val = float(self.shift_x_line.text())
+                shift_move(self.device_x, shift_val, self.user_unit)
+            elif axis == "Y":
+                shift_move(self.device_y, shift_val, self.user_unit)
+                shift_val = float(self.shift_y_line.text())
+        except ValueError:
+            pass
     
     def connect_translator(self):
         try:
@@ -518,7 +528,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         event.accept() # let the window close
 
     
-    
+class MeasurmentHandler(QtCore.QObject):
+    running = False
+    newTextAndColor = QtCore.pyqtSignal(str, object)  
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication
