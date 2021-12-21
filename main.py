@@ -461,14 +461,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     line = (str(point_number) + "," + time_now + "," + 
                             str(x_pos) + "," + str(y_pos) + 
                             "," + str(power_value)).replace("\r\n", "")
+                    shw_line = "{:^4}|{:^8}|{:^8.4f}|{:^8.4f}|{:^8.4f}".format(point_number, 
+                                                                                  time_now, x_pos, 
+                                                                                  y_pos,float(power_value))
                     print(repr(line))
                     file.write(line + '\r')
-                    self.show_info(line.replace(",", " ").replace("\r", ""))
+                    self.show_info(shw_line)
                     point_number += 1
                 
                 if self.diameter_line.text() != "":
                     self.diameters_list.append(float(self.diameter_line.text()))
                     self.x_coords_list.append(x_pos)
+                    self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
                                      pen=self.main_graph_pen, symbol="o", 
