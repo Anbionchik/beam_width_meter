@@ -4,6 +4,7 @@ Created on Tue Dec 14 10:36:37 2021
 
 @author: Anbion
 """
+
 import sys
 import os
 from PyQt5 import QtWidgets, QtCore
@@ -13,6 +14,34 @@ import time
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 from statistics import mean
+import platform
+
+# Dependences
+    
+# For correct usage of the library libximc,
+# you need to add the file pyximc.py wrapper with the structures of the library to python path.
+cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+
+# Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# bindy.dll
+# libximc.dll
+# xiwrapper.dll
+if platform.system() == "Windows":
+    # Determining the directory with dependencies for windows depending on the bit depth.
+    
+    if sys.version_info >= (3,8):
+        os.add_dll_directory(ximc_package_dir)
+    else:
+        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+
+try: 
+    import pyximc
+except ImportError as err:
+    print ("Can't import pyximc module. The most probable reason is that you changed the relative location of the test_Python.py and pyximc.py files. See developers' documentation for details.")
+    exit()
+
 from translator_controller import (initialize_axes, 
                                    close_axes, 
                                    user_calibration,
@@ -73,9 +102,12 @@ test_val_list = [-0.0003,
 
 
 
-dll_path = "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\"
-if not "d:\\XIlab\\beam_width_meter\\pyximc_wrapper\\" in os.environ["Path"]:
-    os.environ["Path"] = dll_path + ";" + os.environ["Path"]
+# dll_path = "C://Users//khlopkov//Desktop//beam_width_meter//beam_width_meter//pyximc_wrapper"
+# if not "C://Users//khlopkov//Desktop//beam_width_meter//beam_width_meter//pyximc_wrapper" in os.environ["Path"]:
+#     os.environ["Path"] = dll_path + ";" + os.environ["Path"]
+
+
+
 
 class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self):
