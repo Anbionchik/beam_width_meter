@@ -102,9 +102,8 @@ test_val_list = [-0.0003,
 
 
 
-# dll_path = "C://Users//khlopkov//Desktop//beam_width_meter//beam_width_meter//pyximc_wrapper"
-# if not "C://Users//khlopkov//Desktop//beam_width_meter//beam_width_meter//pyximc_wrapper" in os.environ["Path"]:
-#     os.environ["Path"] = dll_path + ";" + os.environ["Path"]
+maestro_address = "192.168.77.77"
+maestro_port = 5000
 
 
 
@@ -156,9 +155,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.folder_name = "../"
         self.results_folder_path.setText(self.folder_name)
         self.info_field.setEnabled(True)
-
-        self.maestro_address = "192.168.77.77"
-        self.maestro_port = 5000
         
         # Ручки для оформления графиков
         self.main_graph_pen = pg.mkPen(color=(229,43,80), width=2)
@@ -199,7 +195,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def connect_powermeter(self):
         
-        # addr = (self.maestro_address, self.maestro_port)
+        # addr = (maestro_address, maestro_port)
         # self.tcp_socket = socket(AF_INET, SOCK_STREAM)
         # self.tcp_socket.settimeout(4.0)
         # self.tcp_socket.connect(addr)
