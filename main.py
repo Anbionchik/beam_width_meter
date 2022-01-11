@@ -115,6 +115,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_powermeter_btn.clicked.connect(self.connect_powermeter)
         self.connect_translator_btn.clicked.connect(self.connect_translator)
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
+        self.interrupt_btn.clicked.connect(self.interrupt_measurment)
         self.step_across_value = 0.01
         self.step_along_value = 1  
         self.wait_time = 1000 # в мс
@@ -421,9 +422,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def execute_measurment(self):
         
+        self.interrupt_measurment_flag = False
+        self.interrupt_btn.setEnabled(True)
+        self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
         self.main_graph.clear()
         self.translator_coords_graph.clear()
+        self.diameter_line.clear()
         self.show_info("Начинаем измерение.")
         time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
@@ -442,6 +447,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.gauss_graph.clear()
                 
                 for i in range(self.steps_across):
+                    
+                    if self.interrupt_measurment_flag:
+                        
+                        self.show_info("Измерение прервано")
+                        self.begin_measurment_btn.setEnabled(True)
+                        return
                     
                     if not beam_end_point is None:
                         if i - beam_end_point[0] > 10:
@@ -532,7 +543,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             
     
         
-
+    def interrupt_measurment(self):
+        self.interrupt_btn.setEnabled(False)
+        self.interrupt_measurment_flag = True
         
     def show_info(self, message):
         self.info_field.appendPlainText(message)
