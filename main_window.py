@@ -64,6 +64,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.connect_translator_btn.sizePolicy().hasHeightForWidth())
         self.connect_translator_btn.setSizePolicy(sizePolicy)
+        self.connect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.connect_translator_btn.setStyleSheet("background-color: rgb(211, 255, 190);")
         self.connect_translator_btn.setObjectName("connect_translator_btn")
         self.gridLayout.addWidget(self.connect_translator_btn, 0, 0, 1, 2)
@@ -74,6 +75,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.disconnect_translator_btn.sizePolicy().hasHeightForWidth())
         self.disconnect_translator_btn.setSizePolicy(sizePolicy)
+        self.disconnect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.disconnect_translator_btn.setStyleSheet("background-color: rgb(255, 205, 205);")
         self.disconnect_translator_btn.setObjectName("disconnect_translator_btn")
         self.gridLayout.addWidget(self.disconnect_translator_btn, 0, 2, 1, 3)
@@ -148,6 +150,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.disconnect_powermeter_btn.sizePolicy().hasHeightForWidth())
         self.disconnect_powermeter_btn.setSizePolicy(sizePolicy)
+        self.disconnect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.disconnect_powermeter_btn.setStyleSheet("background-color: rgb(255, 205, 205);")
         self.disconnect_powermeter_btn.setObjectName("disconnect_powermeter_btn")
         self.gridLayout_2.addWidget(self.disconnect_powermeter_btn, 0, 1, 1, 1)
@@ -229,6 +232,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.connect_powermeter_btn.sizePolicy().hasHeightForWidth())
         self.connect_powermeter_btn.setSizePolicy(sizePolicy)
+        self.connect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.connect_powermeter_btn.setStyleSheet("background-color: rgb(211, 255, 190);\n"
 "\n"
 "")

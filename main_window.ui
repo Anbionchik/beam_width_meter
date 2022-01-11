@@ -141,6 +141,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
+         </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(211, 255, 190);</string>
          </property>
@@ -159,6 +165,12 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 205, 205);</string>
@@ -283,6 +295,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
+         </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(255, 205, 205);</string>
          </property>
@@ -404,6 +422,12 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>24</height>
+          </size>
          </property>
          <property name="styleSheet">
           <string notr="true">background-color: rgb(211, 255, 190);
