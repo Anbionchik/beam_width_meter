@@ -101,8 +101,10 @@ test_val_list = [-0.0003,
 ]
 
 
-
-maestro_address = "192.168.77.77"
+# Static
+maestro_address = "192.168.77.78"
+# Dynamic
+# maestro_address = "172.16.16.84"
 maestro_port = 5000
 
 
@@ -196,16 +198,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def connect_powermeter(self):
         
-        # addr = (maestro_address, maestro_port)
-        # self.tcp_socket = socket(AF_INET, SOCK_STREAM)
-        # self.tcp_socket.settimeout(4.0)
-        # self.tcp_socket.connect(addr)
+        addr = (maestro_address, maestro_port)
+        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        self.tcp_socket.settimeout(4.0)
         try:
-            # out_data = str.encode("*VER")
-            # self.tcp_socket.send(out_data)
-            # in_data = self.tcp_socket.recv(1024)
-            # in_data = bytes.decode(in_data)
-            in_data = "Фантомный маэстро"
+            self.tcp_socket.connect(addr)
+            out_data = str.encode("*VER")
+            self.tcp_socket.send(out_data)
+            in_data = self.tcp_socket.recv(1024)
+            in_data = bytes.decode(in_data)
+            # in_data = "Фантомный маэстро"
             self.show_info("Измеритель мощности подключён: " + in_data)
             self.disconnect_powermeter_btn.setEnabled(True)
             self.connect_powermeter_btn.setEnabled(False)
@@ -252,8 +254,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 shift_val = float(self.shift_x_line.text())
                 shift_move(self.device_x, shift_val, self.user_unit)
             elif axis == "Y":
-                shift_move(self.device_y, shift_val, self.user_unit)
                 shift_val = float(self.shift_y_line.text())
+                shift_move(self.device_y, shift_val, self.user_unit)
         except ValueError:
             pass
     
@@ -286,7 +288,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     
     def disconnect_powermeter(self):
-        # self.tcp_socket.close()
+        self.tcp_socket.close()
         self.show_info("Измеритель мощности отключён")
         self.disconnect_powermeter_btn.setEnabled(False)
         self.connect_powermeter_btn.setEnabled(True)
@@ -404,16 +406,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def find_diameter(self, x, gauss_fit):
         threshold = float(self.threshold_line.text())
-        gauss_max = gauss_fit.max()
-        threshold_curve = np.full(len(x), gauss_max * threshold)
-        
-        intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
-        self.gauss_graph.plot(*intersection_list, pen=None,
-                              symbol='x', symbolBrush="7CFC00",
-                              symbolSize=8)
-        if len(intersection_list[0]) == 2:
-            diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
-            self.diameter_line.setText(str(diameter))
+        if not gauss_fit is None: 
+            gauss_max = gauss_fit.max()
+            threshold_curve = np.full(len(x), gauss_max * threshold)
+            
+            intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
+            if not intersection_list is None:            
+                self.gauss_graph.plot(*intersection_list, pen=None,
+                                      symbol='x', symbolBrush="7CFC00",
+                                      symbolSize=8)
+                if len(intersection_list[0]) == 2:
+                    diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
+                    self.diameter_line.setText(str(diameter))
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -474,8 +478,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     power_value = None
                     while power_value is None:                        
-                        # power_value = self.get_point()                    
-                        power_value = test_val_list[i]
+                        power_value = self.get_point()                    
+                        # power_value = test_val_list[i]
                         if power_value is None:
                             self.show_info("Повторный запрос значения мощности")
                     
@@ -533,6 +537,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
+                QtCore.QThread.msleep(10000) 
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
             file.write("N,X_pos,Diameter\r")
