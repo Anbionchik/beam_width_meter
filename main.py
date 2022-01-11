@@ -33,7 +33,7 @@ if platform.system() == "Windows":
     
     if sys.version_info >= (3,8):
         os.add_dll_directory(ximc_package_dir)
-    else:
+    if not ximc_package_dir in os.environ["Path"]:
         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
 
 try: 
@@ -187,7 +187,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.gauss_graph.setLabel('left', "P', мм")
         self.gauss_graph.setLabel('bottom', 'X, мм')
         
-        self.translator_move_history = [[],[]]    
+            
         self.power_list = []
         
         
@@ -428,6 +428,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.params_setter()
         self.main_graph.clear()
         self.translator_coords_graph.clear()
+        self.translator_move_history = [[],[]]
         self.diameter_line.clear()
         self.show_info("Начинаем измерение.")
         time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
@@ -451,6 +452,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     if self.interrupt_measurment_flag:
                         
                         self.show_info("Измерение прервано")
+                        move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
                         self.begin_measurment_btn.setEnabled(True)
                         return
                     
