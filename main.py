@@ -58,54 +58,18 @@ import numpy as np
 from statistics import stdev
 
 
-
-test_val_list = [-0.0003,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                  0.002,
-                    0.002,
-                    0.0019,
-                    0.0001,
-                    0.0006,
-                    0.0013,
-                    0.0008,
-                    0.0046,
-                    0.0101,
-                    0.0216,
-                    0.0351,
-                    0.0539,
-                    0.0737,
-                    0.0916,
-                    0.1033,
-                    0.111,
-                    0.1117,
-                    0.1126,
-                    0.1141,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-                    0.1135,
-                    0.11136,
-]
-
-
 # Static
 maestro_address = "192.168.77.78"
 # Dynamic
 # maestro_address = "172.16.16.84"
 maestro_port = 5000
+
+maestro_baud_rate = 115200
+
+connection_type = 'USB'
+
+if connection_type == 'USB':
+    import pyvisa
 
 
 
@@ -197,24 +161,42 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         
     def connect_powermeter(self):
+        if connection_type == 'USB':
+            try:
+                rm = pyvisa.ResourceManager()
+                rm.list_resources()
+                self.my_instrument = rm.open_resource(rm.list_resources()[0])
+                self.my_instrument.baud_rate = maestro_baud_rate
+                in_data = self.my_instrument.query('*VER?').strip('\n')
+                self.show_info("Измеритель мощности подключён: " + in_data)
+            except IndexError:
+                self.show_info("Подключённых устройств не обнаружено")
+                return
+            except Exception as e:
+                self.show_info("Ошибка запроса на подключённое устройство:" + str(e))
+                return
+        else:
+            addr = (maestro_address, maestro_port)
+            self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+            self.tcp_socket.settimeout(4.0)
+            try:
+                self.tcp_socket.connect(addr)
+                out_data = str.encode("*VER")
+                self.tcp_socket.send(out_data)
+                in_data = self.tcp_socket.recv(1024)
+                in_data = bytes.decode(in_data)
+                # in_data = "Фантомный маэстро"
+                self.show_info("Измеритель мощности подключён: " + in_data)
+            except timeout:
+                self.show_info("Не удалось подключиться к измерителю мощности :(")
+                return
         
-        addr = (maestro_address, maestro_port)
-        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
-        self.tcp_socket.settimeout(4.0)
-        try:
-            self.tcp_socket.connect(addr)
-            out_data = str.encode("*VER")
-            self.tcp_socket.send(out_data)
-            in_data = self.tcp_socket.recv(1024)
-            in_data = bytes.decode(in_data)
-            # in_data = "Фантомный маэстро"
-            self.show_info("Измеритель мощности подключён: " + in_data)
-            self.disconnect_powermeter_btn.setEnabled(True)
-            self.connect_powermeter_btn.setEnabled(False)
-            self.allow_to_measure()
-        except timeout:
-            self.show_info("Не удалось подключиться к измерителю мощности :(")
-        
+        self.disconnect_powermeter_btn.setEnabled(True)
+        self.connect_powermeter_btn.setEnabled(False)
+        self.allow_to_measure()
+    
+    
+    
     def get_point(self):
         
         """
@@ -233,8 +215,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         average_list = []
         
         for _ in range(5):
-            self.tcp_socket.send(str.encode("*CVU"))
-            answer = bytes.decode(self.tcp_socket.recv(1024))
+            if connection_type == 'USB':
+                answer = self.my_instrument.query("*CVU?")
+            else:
+                self.tcp_socket.send(str.encode("*CVU"))
+                answer = bytes.decode(self.tcp_socket.recv(1024))
             average_list.append(float(answer))
             QtCore.QThread.msleep(150)
             
@@ -288,7 +273,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     
     def disconnect_powermeter(self):
-        self.tcp_socket.close()
+        if connection_type == 'USB':
+            self.my_instrument.close()
+        else:
+            self.tcp_socket.close()
         self.show_info("Измеритель мощности отключён")
         self.disconnect_powermeter_btn.setEnabled(False)
         self.connect_powermeter_btn.setEnabled(True)
@@ -537,7 +525,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
-                QtCore.QThread.msleep(10000) 
+                QtCore.QThread.msleeprm(10000) 
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
             file.write("N,X_pos,Diameter\r")
@@ -545,6 +533,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 file.write("{},{},{}\r".format(str(rec), 
                                                str(self.x_coords_list[rec]),
                                                str(self.diameters_list[rec])))
+        self.begin_measurment_btn.setEnabled(True)
+        self.interrupt_btn.setEnabled(False)
         self.show_info("Измерение завершено.")
                 
             
