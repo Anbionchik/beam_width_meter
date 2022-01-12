@@ -15,6 +15,7 @@ from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 from statistics import mean
 import platform
+import powermeter_dialog
 
 # Dependences
     
@@ -66,8 +67,8 @@ maestro_port = 5000
 
 maestro_baud_rate = 115200
 
-connection_type = 'USB'
-
+connection_type = 'Ethernet'
+# TODO убрать
 if connection_type == 'USB':
     import pyvisa
 
@@ -155,9 +156,14 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
             
         self.power_list = []
+
+        self.powermeter_action.triggered.connect(self.open_dialog)
         
         
-            
+    def open_dialog(self):
+        dlg = DialogPowermeter()
+        result_code = dlg.exec_() 
+        print(result_code)        
         
         
     def connect_powermeter(self):
@@ -561,6 +567,49 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.disconnect_translator()
         event.accept() # let the window close
 
+
+
+class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        try:
+            import pyvisa
+        except ModuleNotFoundError:
+            self.radioButton_2.setEnabled(False)
+        self.com_port_box.setEnabled(False)
+        self.rescan_btn.setEnabled(False)
+        self.baud_rate_line.setEnabled(False)
+        
+        self.radioButton.clicked.connect(self.change_connection_type)
+        self.radioButton_2.clicked.connect(self.change_connection_type)
+        self.rescan_btn.clicked.connect(self.rescan_com_ports)
+        
+    def change_connection_type(self):
+        sender = self.sender()
+        if sender.text() == "Ethernet":
+            if not self.ip_line.isEnabled():
+                self.ip_line.setEnabled(True)
+                self.port_line.setEnabled(True)
+            if self.com_port_box.isEnabled():
+                self.com_port_box.setEnabled(False)
+                self.rescan_btn.setEnabled(False)
+                self.baud_rate_line.setEnabled(False)
+        else:
+            if self.ip_line.isEnabled():
+                self.ip_line.setEnabled(False)
+                self.port_line.setEnabled(False)
+            if not self.com_port_box.isEnabled():
+                self.com_port_box.setEnabled(True)
+                self.rescan_btn.setEnabled(True)
+                self.baud_rate_line.setEnabled(True)
+                
+    def rescan_com_ports(self):
+        rm = pyvisa.ResourceManager()
+        
+        
+    
+    
     
 class MeasurmentHandler(QtCore.QObject):
     running = False

@@ -325,7 +325,13 @@ class Ui_MainWindow(object):
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1314, 21))
         self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
         MainWindow.setMenuBar(self.menubar)
+        self.powermeter_action = QtWidgets.QAction(MainWindow)
+        self.powermeter_action.setObjectName("powermeter_action")
+        self.menu.addAction(self.powermeter_action)
+        self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -351,5 +357,7 @@ class Ui_MainWindow(object):
         self.begin_measurment_btn.setText(_translate("MainWindow", "Начать измерение"))
         self.interrupt_btn.setText(_translate("MainWindow", "Прервать измерение"))
         self.label_3.setText(_translate("MainWindow", "Путь сохранения"))
+        self.menu.setTitle(_translate("MainWindow", "Подключение"))
+        self.powermeter_action.setText(_translate("MainWindow", "Подключение измерителя"))
 
 from pyqtgraph import PlotWidget
