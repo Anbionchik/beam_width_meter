@@ -17,6 +17,13 @@ from statistics import mean
 import platform
 import powermeter_dialog
 
+without_USB = False
+try:
+    import pyvisa
+except ModuleNotFoundError:
+    without_USB = True
+    
+
 # Dependences
     
 # For correct usage of the library libximc,
@@ -39,7 +46,7 @@ if platform.system() == "Windows":
 
 try: 
     import pyximc
-except ImportError as err:
+except ImportError:
     print ("Can't import pyximc module. The most probable reason is that you changed the relative location of the test_Python.py and pyximc.py files. See developers' documentation for details.")
     exit()
 
@@ -60,17 +67,17 @@ from statistics import stdev
 
 
 # Static
-maestro_address = "192.168.77.78"
+powermeter_ip_address = "192.168.77.78"
 # Dynamic
-# maestro_address = "172.16.16.84"
-maestro_port = 5000
+# powermeter_ip_address = "172.16.16.84"
+powermeter_port = 5000
 
-maestro_baud_rate = 115200
+powermeter_baud_rate = 115200
+
+powermeter_com_port = ''
 
 connection_type = 'Ethernet'
-# TODO убрать
-if connection_type == 'USB':
-    import pyvisa
+
 
 
 
@@ -161,7 +168,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         
     def open_dialog(self):
-        dlg = DialogPowermeter()
+        dlg = DialogPowermeter(powermeter_ip_address,
+                               powermeter_port,
+                               powermeter_baud_rate)
         result_code = dlg.exec_() 
         print(result_code)        
         
@@ -171,8 +180,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             try:
                 rm = pyvisa.ResourceManager()
                 rm.list_resources()
-                self.my_instrument = rm.open_resource(rm.list_resources()[0])
-                self.my_instrument.baud_rate = maestro_baud_rate
+                self.my_instrument = rm.open_resource(powermeter_com_port)
+                self.my_instrument.baud_rate = powermeter_baud_rate
                 in_data = self.my_instrument.query('*VER?').strip('\n')
                 self.show_info("Измеритель мощности подключён: " + in_data)
             except IndexError:
@@ -182,7 +191,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.show_info("Ошибка запроса на подключённое устройство:" + str(e))
                 return
         else:
-            addr = (maestro_address, maestro_port)
+            addr = (powermeter_ip_address, powermeter_port)
             self.tcp_socket = socket(AF_INET, SOCK_STREAM)
             self.tcp_socket.settimeout(4.0)
             try:
@@ -531,7 +540,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
-                QtCore.QThread.msleeprm(10000) 
+                QtCore.QThread.msleep(10000) 
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
             file.write("N,X_pos,Diameter\r")
@@ -570,12 +579,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
 
 
 class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
-    def __init__(self):
+    def __init__(self, ip, port, baud_rate):
         super().__init__()
         self.setupUi(self)
-        try:
-            import pyvisa
-        except ModuleNotFoundError:
+        self.ip_line.setText(ip)
+        self.port_line.setText(str(port))
+        self.baud_rate_line.setText(str(baud_rate))
+        if without_USB:
             self.radioButton_2.setEnabled(False)
         self.com_port_box.setEnabled(False)
         self.rescan_btn.setEnabled(False)
@@ -584,6 +594,10 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
         self.radioButton.clicked.connect(self.change_connection_type)
         self.radioButton_2.clicked.connect(self.change_connection_type)
         self.rescan_btn.clicked.connect(self.rescan_com_ports)
+        self.ok_btn.clicked.connect(self.save_and_exit)
+        self.cancel_btn.clicked.connect(self.save_and_exit)
+        
+                
         
     def change_connection_type(self):
         sender = self.sender()
@@ -605,7 +619,35 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
                 self.baud_rate_line.setEnabled(True)
                 
     def rescan_com_ports(self):
+        self.com_port_box.clear()
         rm = pyvisa.ResourceManager()
+        info = rm.list_resources_info()
+        keys_list = info.keys()
+        ports_list = []
+        for key in keys_list:
+            ports_list.append("{} -> {}".format(info[key].alias, key))
+        self.com_port_box.addItems(ports_list)
+    
+    def save_and_exit(self):
+        if self.sender().text() == "OK":
+            global connection_type
+            if self.radioButton.isChecked():
+                global powermeter_ip_address
+                global powermeter_port
+                powermeter_ip_address = self.ip_line.text()
+                powermeter_port = int(self.port_line.text())
+                connection_type = 'Ethernet'
+            else:
+                global powermeter_com_port
+                global powermeter_baud_rate
+                powermeter_com_port = self.com_port_box.currentText()
+                powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
+                powermeter_baud_rate = int(self.baud_rate_line.text())
+                connection_type = 'USB'
+            self.done(1)
+        else:
+            self.done(0)
+        
         
         
     
