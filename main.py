@@ -78,6 +78,8 @@ powermeter_com_port = ''
 
 connection_type = 'Ethernet'
 
+commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?'), 'maestro':('*VER?', '*CVU')}
+
 
 
 
@@ -177,19 +179,30 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def connect_powermeter(self):
         if connection_type == 'USB':
-            try:
-                rm = pyvisa.ResourceManager()
-                rm.list_resources()
-                self.my_instrument = rm.open_resource(powermeter_com_port)
-                self.my_instrument.baud_rate = powermeter_baud_rate
-                in_data = self.my_instrument.query('*VER?').strip('\n')
+            self.device = ''
+            rm = pyvisa.ResourceManager()
+            rm.list_resources()
+            self.my_instrument = rm.open_resource(powermeter_com_port)
+            self.my_instrument.baud_rate = powermeter_baud_rate
+            
+            for k, j in commands_dict.items():
+                try:
+                    in_data = self.my_instrument.query(j[0]).strip('\n')
+                    if in_data == "Command not found\r":
+                        raise Exception("Command not found")
+                except Exception as e:
+                    self.show_info(str(e))
+                else:
+                    self.device = k
+                    break
+            if self.device == 'maestro':
                 self.show_info("Измеритель мощности подключён: " + in_data)
-            except IndexError:
-                self.show_info("Подключённых устройств не обнаружено")
+            elif self.device == 'thorlabs':
+                self.show_info("Измеритель мощности подключён: " + in_data)
+            else:
+                self.show_info("Ошибка запроса на подключённое устройство")
                 return
-            except Exception as e:
-                self.show_info("Ошибка запроса на подключённое устройство:" + str(e))
-                return
+        
         else:
             addr = (powermeter_ip_address, powermeter_port)
             self.tcp_socket = socket(AF_INET, SOCK_STREAM)
@@ -231,7 +244,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         for _ in range(5):
             if connection_type == 'USB':
-                answer = self.my_instrument.query("*CVU?")
+                answer = self.my_instrument.query(commands_dict[self.device][1])
             else:
                 self.tcp_socket.send(str.encode("*CVU"))
                 answer = bytes.decode(self.tcp_socket.recv(1024))
@@ -288,9 +301,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     
     def disconnect_powermeter(self):
-        if connection_type == 'USB':
+        if connection_type == 'USB' and self.disconnect_powermeter_btn.isEnabled:
             self.my_instrument.close()
-        else:
+        elif self.disconnect_powermeter_btn.isEnabled:
             self.tcp_socket.close()
         self.show_info("Измеритель мощности отключён")
         self.disconnect_powermeter_btn.setEnabled(False)
@@ -540,7 +553,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 move_to_coords(self.device_x, self.device_y, 
                                (-(self.step_along_value) * (j + 1),0), 
                                self.user_unit)
-                QtCore.QThread.msleep(10000) 
+                if j < self.steps_along -1:
+                    QtCore.QThread.msleep(10000) 
+        
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
             file.write("N,X_pos,Diameter\r")
