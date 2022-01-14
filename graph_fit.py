@@ -57,7 +57,7 @@ def calculator_M2(x_array, y_array, wave_length):
     popx, pcov = curve_fit(quadratic_sqrt, x_array, y_array, (1., 0.02, 0.0001), maxfev=10**6)
     a, b, c = popx
     lambdaP = wave_length * 1e3
-    M2 = np.pi / (8 * lambdaP) * np.sqrt(4 * a * c - b**2)
+    M2 = round(np.pi / (8 * lambdaP) * np.sqrt(4 * a * c - b**2), 2)
     
     x_teor = np.linspace(x_array[0], x_array[-1], 1000)
     y_teor = quadratic_sqrt(x_teor, a, b, c)
