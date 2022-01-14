@@ -51,3 +51,17 @@ def find_intersection(x, y1, y2):
     elif intersection.geom_type == 'Point':
         return intersection.xy
     
+def quadratic_sqrt(x, a, b, c):
+    return np.sqrt(a + b * x + c * x**2)
+
+def calculator_M2(x_array, y_array, wave_length):
+    popx, pcov = curve_fit(quadratic_sqrt, x_array, y_array, (1., 0.02, 0.0001), maxfev=10**6)
+    a, b, c = popx
+    lambdaP = wave_length * 1e3
+    M2 = np.pi / (8 * lambdaP) * np.sqrt(4 * a * c - b**2)
+    
+    x_teor = np.linspace(x_array[0], x_array[-1], 1000)
+    y_teor = quadratic_sqrt(x_teor, a, b, c)
+    
+    return M2, x_teor, y_teor
+    

@@ -61,7 +61,7 @@ from translator_controller import (initialize_axes,
                                    move_to_coords,
                                    shift_move)
 from pyximc_wrapper.pyximc import *
-from graph_fit import get_gauss_fit, find_intersection
+from graph_fit import get_gauss_fit, find_intersection, calculator_M2
 import numpy as np
 from statistics import stdev
 
@@ -98,6 +98,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
+        self.wave_length = 1064
         
         
         
@@ -222,7 +223,23 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_powermeter_btn.setEnabled(False)
         self.allow_to_measure()
     
-    
+    def get_wave_length(self):
+        if connection_type == 'USB':
+            if self.device == 'maestro':
+                
+                self.show_info("Измеритель мощности подключён: " + in_data)
+            elif self.device == 'thorlabs':
+                self.show_info("Измеритель мощности подключён: " + in_data)
+        else:
+            pass
+    def set_wave_length(self):
+        if connection_type == 'USB':
+            if self.device == 'maestro':
+                self.show_info("Измеритель мощности подключён: " + in_data)
+            elif self.device == 'thorlabs':
+                self.show_info("Измеритель мощности подключён: " + in_data)
+        else:
+            pass
     
     def get_point(self):
         
@@ -559,6 +576,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 except ValueError:
                     pass
                 self.diameter_line.clear()
+                
+                if len(diameters_list) >= 4:
+                    self.value_M2, x_coords_list_teor, diameters_list_teor = calculator_M2(self.x_coords_list, 
+                                                                                           self.diameters_list, 
+                                                                                           (self.wave_length * 10**-9))
                 
                 move_to_coords(self.device_x, self.device_y, 
                                ((self.step_along_value) * (j + 1),0), 
