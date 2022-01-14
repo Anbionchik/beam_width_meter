@@ -3,7 +3,7 @@
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="enabled">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <property name="geometry">
    <rect>
@@ -83,7 +83,7 @@ QPushButton#interrupt_btn:disabled {
 }
 
 QPushButton#interrupt_btn:pressed{
-background-color: #c21400
+background-color:
 }
 </string>
   </property>
