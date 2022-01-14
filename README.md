@@ -1,12 +1,12 @@
 # beam_width_meter
-Measure the width of laser beam usnig Maestro powermeter and Standa motorized stage 
+Measure the width of laser beam usnig Thorlabs or GentecEO powermeter and Standa motorized stage 
 
-Requirements:
-  pyqtgraph
-  scipy
-  shapely
-PyQt5
-
-Connect maestro via Ethernet, make network, add IP and Port to maestro_address and maestro_port variables in main.py 
+Requirements:  
+pyqtgraph  
+PyQt5  
+pyvisa  
+scipy  
+shapely  
 
 Shapely should be installed with all binaries  either from here (https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely) or via conda install.
+Module pyvisa requires VISA backend (can be installed form here https://www.ni.com/ru-ru/support/downloads/drivers/download.ni-visa.html#409839). 
