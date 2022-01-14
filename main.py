@@ -98,8 +98,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
-        self.diameters_list = []
-        self.x_coords_list = []
+        
         
         
         self.threshold_line.setText('0.137')
@@ -449,6 +448,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.clear()
         self.translator_coords_graph.clear()
         self.translator_move_history = [[],[]]
+        self.diameters_list = []
+        self.x_coords_list = []
         self.diameter_line.clear()
         self.show_info("Начинаем измерение.")
         time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
@@ -474,6 +475,15 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         self.show_info("Измерение прервано")
                         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
                         self.begin_measurment_btn.setEnabled(True)
+                        self.interrupt_btn.setEnabled(False)
+                        if self.diameters_list:                            
+                            with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
+                                file.write("N,X_pos,Diameter\r")
+                                for rec in range(len(self.diameters_list)):
+                                    file.write("{},{},{}\r".format(str(rec), 
+                                                                   str(self.x_coords_list[rec]),
+                                                                   str(self.diameters_list[rec])))
+                        
                         return
                     
                     if not beam_end_point is None:
@@ -485,7 +495,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     # shift_move(self.device_y, self.step_across_value, 
                     #            self.user_unit)
                     
-                    coords["x"] = -(self.step_along_value) * j
+                    coords["x"] = self.step_along_value * j
                     coords["y"] = self.step_across_value * i
                     
                     move_to_coords(self.device_x, self.device_y, 
@@ -551,7 +561,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.diameter_line.clear()
                 
                 move_to_coords(self.device_x, self.device_y, 
-                               (-(self.step_along_value) * (j + 1),0), 
+                               ((self.step_along_value) * (j + 1),0), 
                                self.user_unit)
                 if j < self.steps_along -1:
                     QtCore.QThread.msleep(10000) 
