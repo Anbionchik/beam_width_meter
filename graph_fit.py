@@ -24,8 +24,7 @@ def get_diff(x, y):
     
     return diff_array
 
-def get_gauss_fit(x, y):
-    sigma = 1
+def get_gauss_fit(x, y, sigma=1):
     y = get_diff(x,y)
     y_max = y.max()
     x_max = x[np.argmax(y)]

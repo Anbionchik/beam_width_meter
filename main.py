@@ -389,7 +389,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def draw_gauss(self, start_point, end_point):
-        gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
+        if not end_point is None and not start_point is None:
+            sigma = end_point - start_point
+            gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
+        else:
+            gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
         
         if not start_point is None and start_point[0] > 7:
             crds_list = self.local_coords_list[start_point[0] - 7:]
