@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -14,72 +16,9 @@ class Ui_MainWindow(object):
         MainWindow.setEnabled(True)
         MainWindow.resize(1314, 695)
         MainWindow.setAutoFillBackground(False)
-        MainWindow.setStyleSheet("QPushButton#begin_measurment_btn{\n"
-"box-shadow:inset 0px 1px 0px 0px #d9fbbe;\n"
-"background:linear-gradient(to bottom, #b8e356 5%, #a5cc52 100%);\n"
-"background-color:#b8e356;\n"
-"border-radius:6px;\n"
-"border:1px solid #83c41a;\n"
-"display:inline-block;\n"
-"cursor:pointer;\n"
-"color:#000000;\n"
-"font-family:Arial;\n"
-"font-weight:bold;\n"
-"text-decoration:none;\n"
-"text-shadow:0px 1px 0px #86ae47;\n"
-"}\n"
-"QPushButton#begin_measurment_btn:disabled {\n"
-"box-shadow:inset 0px 0px 14px -3px #f2fadc;\n"
-"    background:linear-gradient(to bottom, #dbe6c4 5%, #9ba892 100%);\n"
-"    background-color:#dbe6c4;\n"
-"    border-radius:6px;\n"
-"    border:1px solid #b2b8ad;\n"
-"    display:inline-block;\n"
-"    cursor:pointer;\n"
-"    color:#757d6f;\n"
-"    font-family:Arial;\n"
-"    font-weight:bold;\n"
-"    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #ced9bf;\n"
-"}\n"
-"QPushButton#begin_measurment_btn:pressed{\n"
-"background-color:#9ede16\n"
-"}\n"
-"\n"
-"QPushButton#interrupt_btn{\n"
-"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
-"    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
-"    background-color:#fe1a00;\n"
-"    border-radius:6px;\n"
-"    border:1px solid #d83526;\n"
-"    display:inline-block;\n"
-"    cursor:pointer;\n"
-"    color:#ffffff;\n"
-"    font-family:Arial;\n"
-"    font-weight:bold;\n"
-"    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #b23e35;\n"
-"}\n"
-"\n"
-"QPushButton#interrupt_btn:disabled {\n"
-"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
-"    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
-"    background-color:#ffa196;\n"
-"    border-radius:6px;\n"
-"    border:1px solid #ab6b63;\n"
-"    display:inline-block;\n"
-"    cursor:pointer;\n"
-"    color:#ffffff;\n"
-"    font-family:Arial;\n"
-"    font-weight:bold;\n"
-"    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #b23e35;\n"
-"}\n"
-"\n"
-"QPushButton#interrupt_btn:pressed{\n"
-"background-color: #c21400\n"
-"}\n"
-"")
+        MainWindow.setStyleSheet("QMainWindow{\n"
+"background-color:#293133\n"
+"}")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -113,6 +52,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.translator_coords_graph = PlotWidget(self.centralwidget)
+        self.translator_coords_graph.setEnabled(False)
         self.translator_coords_graph.setMinimumSize(QtCore.QSize(340, 300))
         self.translator_coords_graph.setObjectName("translator_coords_graph")
         self.horizontalLayout_3.addWidget(self.translator_coords_graph)
@@ -121,13 +61,30 @@ class Ui_MainWindow(object):
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.connect_translator_btn = QtWidgets.QPushButton(self.centralwidget)
+        self.connect_translator_btn.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.connect_translator_btn.sizePolicy().hasHeightForWidth())
         self.connect_translator_btn.setSizePolicy(sizePolicy)
         self.connect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
-        self.connect_translator_btn.setStyleSheet("background-color: rgb(211, 255, 190);")
+        self.connect_translator_btn.setStyleSheet("QPushButton{\n"
+"box-shadow:inset 0px 1px 0px 0px #fff6af;\n"
+"    background:linear-gradient(to bottom, #ffec64 5%, #ffab23 100%);\n"
+"    background-color:#ffec64;\n"
+"    border-radius:6px;\n"
+"    border:1px solid #ffaa22;\n"
+"}\n"
+"QPushButton:disabled{\n"
+"background-color:#fff3a1;\n"
+"color:#757d6f;\n"
+"}\n"
+"QPushButton:pressed{\n"
+"background-color:#ffe52b;\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #ffaa22;\n"
+"}")
         self.connect_translator_btn.setObjectName("connect_translator_btn")
         self.gridLayout.addWidget(self.connect_translator_btn, 0, 0, 1, 2)
         self.disconnect_translator_btn = QtWidgets.QPushButton(self.centralwidget)
@@ -138,7 +95,24 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.disconnect_translator_btn.sizePolicy().hasHeightForWidth())
         self.disconnect_translator_btn.setSizePolicy(sizePolicy)
         self.disconnect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
-        self.disconnect_translator_btn.setStyleSheet("background-color: rgb(255, 205, 205);")
+        self.disconnect_translator_btn.setStyleSheet("QPushButton{\n"
+"box-shadow: 0px 10px 14px -7px #276873;\n"
+"    background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);\n"
+"    background-color:#599bb3;\n"
+"    border:1px solid #305f70;\n"
+"border-radius:6px;\n"
+"color:#ffffff;\n"
+"}\n"
+"QPushButton:disabled{\n"
+"background-color:#92aab3;\n"
+"color:#757d6f;\n"
+"}\n"
+"QPushButton:pressed{\n"
+"background-color:#2694bd;\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #305f70;\n"
+"}")
         self.disconnect_translator_btn.setObjectName("disconnect_translator_btn")
         self.gridLayout.addWidget(self.disconnect_translator_btn, 0, 2, 1, 3)
         self.reverse_x_btn = QtWidgets.QPushButton(self.centralwidget)
@@ -219,6 +193,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy)
+        self.label.setStyleSheet("color:#dedede")
         self.label.setObjectName("label")
         self.gridLayout_2.addWidget(self.label, 1, 0, 1, 1)
         self.disconnect_powermeter_btn = QtWidgets.QPushButton(self.centralwidget)
@@ -229,7 +204,24 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.disconnect_powermeter_btn.sizePolicy().hasHeightForWidth())
         self.disconnect_powermeter_btn.setSizePolicy(sizePolicy)
         self.disconnect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
-        self.disconnect_powermeter_btn.setStyleSheet("background-color: rgb(255, 205, 205);")
+        self.disconnect_powermeter_btn.setStyleSheet("QPushButton{\n"
+"box-shadow: 0px 10px 14px -7px #276873;\n"
+"    background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);\n"
+"    background-color:#599bb3;\n"
+"    border:1px solid #305f70;\n"
+"border-radius:6px;\n"
+"color:#ffffff;\n"
+"}\n"
+"QPushButton:disabled{\n"
+"background-color:#92aab3;\n"
+"color:#757d6f;\n"
+"}\n"
+"QPushButton:pressed{\n"
+"background-color:#2694bd;\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #305f70;\n"
+"}")
         self.disconnect_powermeter_btn.setObjectName("disconnect_powermeter_btn")
         self.gridLayout_2.addWidget(self.disconnect_powermeter_btn, 0, 1, 1, 1)
         self.step_along_beam = QtWidgets.QLineEdit(self.centralwidget)
@@ -241,6 +233,7 @@ class Ui_MainWindow(object):
         self.step_along_beam.setObjectName("step_along_beam")
         self.gridLayout_2.addWidget(self.step_along_beam, 2, 1, 1, 1)
         self.label_n_along = QtWidgets.QLabel(self.centralwidget)
+        self.label_n_along.setStyleSheet("color: #dedede")
         self.label_n_along.setText("")
         self.label_n_along.setObjectName("label_n_along")
         self.gridLayout_2.addWidget(self.label_n_along, 5, 1, 1, 1)
@@ -258,6 +251,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
         self.label_2.setSizePolicy(sizePolicy)
+        self.label_2.setStyleSheet("color:#dedede")
         self.label_2.setObjectName("label_2")
         self.gridLayout_2.addWidget(self.label_2, 1, 1, 1, 1)
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
@@ -266,22 +260,39 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy)
+        self.label_6.setStyleSheet("color:#dedede")
         self.label_6.setObjectName("label_6")
         self.gridLayout_2.addWidget(self.label_6, 3, 0, 1, 1)
         self.label_n_across = QtWidgets.QLabel(self.centralwidget)
+        self.label_n_across.setStyleSheet("color: #dedede")
         self.label_n_across.setText("")
         self.label_n_across.setObjectName("label_n_across")
         self.gridLayout_2.addWidget(self.label_n_across, 5, 0, 1, 1)
         self.connect_powermeter_btn = QtWidgets.QPushButton(self.centralwidget)
+        self.connect_powermeter_btn.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.connect_powermeter_btn.sizePolicy().hasHeightForWidth())
         self.connect_powermeter_btn.setSizePolicy(sizePolicy)
         self.connect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
-        self.connect_powermeter_btn.setStyleSheet("background-color: rgb(211, 255, 190);\n"
-"\n"
-"")
+        self.connect_powermeter_btn.setStyleSheet("QPushButton{\n"
+"box-shadow:inset 0px 1px 0px 0px #fff6af;\n"
+"    background:linear-gradient(to bottom, #ffec64 5%, #ffab23 100%);\n"
+"    background-color:#ffec64;\n"
+"    border-radius:6px;\n"
+"    border:1px solid #ffaa22;\n"
+"}\n"
+"QPushButton:disabled{\n"
+"background-color:#fff3a1;\n"
+"color:#757d6f;\n"
+"}\n"
+"QPushButton:pressed{\n"
+"background-color:#ffe52b;\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #ffaa22;\n"
+"}")
         self.connect_powermeter_btn.setObjectName("connect_powermeter_btn")
         self.gridLayout_2.addWidget(self.connect_powermeter_btn, 0, 0, 1, 1)
         self.step_across_beam_n = QtWidgets.QLineEdit(self.centralwidget)
@@ -298,6 +309,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_7.sizePolicy().hasHeightForWidth())
         self.label_7.setSizePolicy(sizePolicy)
+        self.label_7.setStyleSheet("color:#dedede")
         self.label_7.setObjectName("label_7")
         self.gridLayout_2.addWidget(self.label_7, 3, 1, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout_2)
@@ -309,6 +321,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy)
+        self.label_4.setStyleSheet("color:#dedede")
         self.label_4.setObjectName("label_4")
         self.gridLayout_3.addWidget(self.label_4, 1, 0, 1, 1)
         self.threshold_line = QtWidgets.QLineEdit(self.centralwidget)
@@ -334,12 +347,15 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
         self.label_5.setSizePolicy(sizePolicy)
+        self.label_5.setStyleSheet("color:#dedede")
         self.label_5.setObjectName("label_5")
         self.gridLayout_3.addWidget(self.label_5, 1, 2, 1, 1)
         self.label_8 = QtWidgets.QLabel(self.centralwidget)
+        self.label_8.setStyleSheet("color:#dedede")
         self.label_8.setObjectName("label_8")
         self.gridLayout_3.addWidget(self.label_8, 1, 1, 1, 1)
         self.label_9 = QtWidgets.QLabel(self.centralwidget)
+        self.label_9.setStyleSheet("color:#dedede")
         self.label_9.setObjectName("label_9")
         self.gridLayout_3.addWidget(self.label_9, 1, 3, 1, 1)
         self.wave_length_line = QtWidgets.QLineEdit(self.centralwidget)
@@ -356,7 +372,40 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.begin_measurment_btn.sizePolicy().hasHeightForWidth())
         self.begin_measurment_btn.setSizePolicy(sizePolicy)
-        self.begin_measurment_btn.setStyleSheet("")
+        self.begin_measurment_btn.setStyleSheet("QPushButton{\n"
+"box-shadow:inset 0px 1px 0px 0px #d9fbbe;\n"
+"background:linear-gradient(to bottom, #b8e356 5%, #a5cc52 100%);\n"
+"background-color:#b8e356;\n"
+"border-radius:6px;\n"
+"border:1px solid #83c41a;\n"
+"display:inline-block;\n"
+"cursor:pointer;\n"
+"color:#000000;\n"
+"font-family:Arial;\n"
+"font-weight:bold;\n"
+"text-decoration:none;\n"
+"text-shadow:0px 1px 0px #86ae47;\n"
+"}\n"
+"QPushButton:disabled {\n"
+"box-shadow:inset 0px 0px 14px -3px #f2fadc;\n"
+"    background:linear-gradient(to bottom, #dbe6c4 5%, #9ba892 100%);\n"
+"    background-color:#dbe6c4;\n"
+"    border-radius:6px;\n"
+"    border:1px solid #b2b8ad;\n"
+"    display:inline-block;\n"
+"    cursor:pointer;\n"
+"    color:#757d6f;\n"
+"    font-family:Arial;\n"
+"    font-weight:bold;\n"
+"    text-decoration:none;\n"
+"    text-shadow:0px 1px 0px #ced9bf;\n"
+"}\n"
+"QPushButton:pressed{\n"
+"background-color:#9ede16\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #83c41a;\n"
+"}")
         self.begin_measurment_btn.setObjectName("begin_measurment_btn")
         self.gridLayout_3.addWidget(self.begin_measurment_btn, 0, 0, 1, 2)
         self.interrupt_btn = QtWidgets.QPushButton(self.centralwidget)
@@ -366,7 +415,49 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.interrupt_btn.sizePolicy().hasHeightForWidth())
         self.interrupt_btn.setSizePolicy(sizePolicy)
-        self.interrupt_btn.setStyleSheet("")
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setBold(True)
+        font.setUnderline(False)
+        font.setWeight(75)
+        font.setStrikeOut(False)
+        self.interrupt_btn.setFont(font)
+        self.interrupt_btn.setStyleSheet("QPushButton#interrupt_btn{\n"
+"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
+"    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
+"    background-color:#fe1a00;\n"
+"    border-radius:6px;\n"
+"    border:1px solid #d83526;\n"
+"    display:inline-block;\n"
+"    cursor:pointer;\n"
+"    color:#ffffff;\n"
+"    font-family:Arial;\n"
+"    font-weight:bold;\n"
+"    text-decoration:none;\n"
+"    text-shadow:0px 1px 0px #b23e35;\n"
+"}\n"
+"\n"
+"QPushButton#interrupt_btn:disabled {\n"
+"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
+"    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
+"    background-color:#ffa196;\n"
+"    border-radius:6px;\n"
+"    border:1px solid #ab6b63;\n"
+"    display:inline-block;\n"
+"    cursor:pointer;\n"
+"    color:#ffffff;\n"
+"    font-family:Arial;\n"
+"    font-weight:bold;\n"
+"    text-decoration:none;\n"
+"    text-shadow:0px 1px 0px #b23e35;\n"
+"}\n"
+"\n"
+"QPushButton#interrupt_btn:pressed{\n"
+"background-color: #c21400\n"
+"}\n"
+"QPushButton:hover{\n"
+"border:2px solid #d83526;\n"
+"}")
         self.interrupt_btn.setObjectName("interrupt_btn")
         self.gridLayout_3.addWidget(self.interrupt_btn, 0, 2, 1, 2)
         self.verticalLayout_2.addLayout(self.gridLayout_3)
@@ -376,11 +467,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.label_3.setStyleSheet("color:#dedede")
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_2.addWidget(self.label_3)
         self.results_folder_path = QtWidgets.QLineEdit(self.centralwidget)
         self.results_folder_path.setEnabled(False)
         self.results_folder_path.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.results_folder_path.setStyleSheet("")
         self.results_folder_path.setObjectName("results_folder_path")
         self.horizontalLayout_2.addWidget(self.results_folder_path)
         self.choose_folder_btn = QtWidgets.QPushButton(self.centralwidget)
@@ -443,5 +536,4 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "Путь сохранения"))
         self.menu.setTitle(_translate("MainWindow", "Подключение"))
         self.powermeter_action.setText(_translate("MainWindow", "Подключение измерителя"))
-
 from pyqtgraph import PlotWidget

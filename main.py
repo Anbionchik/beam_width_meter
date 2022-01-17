@@ -13,6 +13,7 @@ from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
+
 from statistics import mean
 import platform
 import powermeter_dialog
@@ -66,8 +67,9 @@ import numpy as np
 from statistics import stdev
 
 
+pg.setConfigOptions(antialias=True)
 # Static
-powermeter_ip_address = "192.168.77.78"
+powermeter_ip_address = "172.16.16.84"
 # Dynamic
 # powermeter_ip_address = "172.16.16.84"
 powermeter_port = 5000
@@ -78,7 +80,8 @@ powermeter_com_port = ''
 
 connection_type = 'Ethernet'
 
-commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?'), 'maestro':('*VER?', '*CVU')}
+commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'CORR:WAV?', 'CORR:WAV'), 
+                 'maestro':('*VER?', '*CVU', '*GWL', '*PWC')}
 
 
 
@@ -98,7 +101,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
-        self.wave_length = 1064
         
         
         
@@ -124,6 +126,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
+        self.wave_length_line.editingFinished.connect(self.set_wave_length)
         
         
         
@@ -143,7 +146,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
-        self.main_graph.setLabel('left', 'Ширина пучка, мкм')
+        self.main_graph.setLabel('left', 'Ширина пучка, мм')
         self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
         self.main_graph.addLegend()
         
@@ -189,16 +192,17 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 try:
                     in_data = self.my_instrument.query(j[0]).strip('\n')
                     if in_data == "Command not found\r":
-                        raise Exception("Command not found")
+                        continue
                 except Exception as e:
                     self.show_info(str(e))
                 else:
                     self.device = k
                     break
-            if self.device == 'maestro':
+            if self.device:
                 self.show_info("Измеритель мощности подключён: " + in_data)
-            elif self.device == 'thorlabs':
-                self.show_info("Измеритель мощности подключён: " + in_data)
+                wavelength = self.get_wave_length()
+                self.wave_length_line.setText(wavelength)
+                self.wave_length = int(wavelength)
             else:
                 self.show_info("Ошибка запроса на подключённое устройство")
                 return
@@ -215,6 +219,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 in_data = bytes.decode(in_data)
                 # in_data = "Фантомный маэстро"
                 self.show_info("Измеритель мощности подключён: " + in_data)
+                wavelength = self.get_wave_length()
+                self.wave_length_line.setText(wavelength)
+                self.wave_length = int(wavelength)
             except timeout:
                 self.show_info("Не удалось подключиться к измерителю мощности :(")
                 return
@@ -225,21 +232,35 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def get_wave_length(self):
         if connection_type == 'USB':
-            if self.device == 'maestro':
-                
-                self.show_info("Измеритель мощности подключён: " + in_data)
-            elif self.device == 'thorlabs':
-                self.show_info("Измеритель мощности подключён: " + in_data)
+            wavelength = self.my_instrument.query(
+                commands_dict[self.device][2]).rstrip('\r\n').split()[1]
+            return wavelength           
         else:
-            pass
+            self.tcp_socket.send(str.encode("*GWL"))
+            wavelength = bytes.decode(self.tcp_socket.recv(1024))
+            wavelength = wavelength.rstrip('\r\n').split()[1]
+            return wavelength
+    
     def set_wave_length(self):
+        wavelength = self.wave_length_line.text()
         if connection_type == 'USB':
-            if self.device == 'maestro':
-                self.show_info("Измеритель мощности подключён: " + in_data)
-            elif self.device == 'thorlabs':
-                self.show_info("Измеритель мощности подключён: " + in_data)
+            if self.device == "maestro":
+                self.my_instrument.write(commands_dict[self.device][3] +
+                                         f'{int(wavelength):05}')
+            else:
+                self.my_instrument.write(commands_dict[self.device][3] + " " +
+                                         wavelength)
+            
         else:
-            pass
+            self.tcp_socket.send(str.encode("*PWC" + f'{int(wavelength):05}'))
+        
+        #Проверка успешности установки длины волны
+        recieved_wavelength = self.get_wave_length()
+        if recieved_wavelength == wavelength:
+            self.show_info(f"Длина волны {wavelength} нм установлена успешно.")
+        else:
+            self.show_info(f"Не удалось установить длину волны {wavelength} нм. Возврат к значению {recieved_wavelength}.")
+            self.wave_length_line.setText(recieved_wavelength)
     
     def get_point(self):
         
@@ -389,9 +410,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                           symbolSize=3)
     
     def draw_power(self, start_point, end_point):
-        if not start_point is None and start_point[0] > 7:
-            crds_list = self.local_coords_list[start_point[0] - 7:]
-            pwr_list = self.power_list[start_point[0] - 7:]
+        if not start_point is None and start_point[0] > 10:
+            crds_list = self.local_coords_list[start_point[0] - 10:]
+            pwr_list = self.power_list[start_point[0] - 10:]
             self.line_graph.clear()
             self.line_graph.plot(crds_list, pwr_list, 
                                  pen=self.yellow_pen,
@@ -407,7 +428,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def draw_gauss(self, start_point, end_point):
         if not end_point is None and not start_point is None:
-            sigma = end_point - start_point
+            sigma = end_point[1] - start_point[1]
             gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
         else:
             gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
@@ -568,8 +589,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     point_number += 1
                 
                 if self.diameter_line.text() != "":
-                    self.diameters_list.append(float(self.diameter_line.text()))
-                    self.x_coords_list.append(x_pos)
+                    #TODO убрать
+                    #self.diameters_list.append(float(self.diameter_line.text()))
+                    #self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
@@ -581,10 +603,21 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     pass
                 self.diameter_line.clear()
                 
-                if len(diameters_list) >= 4:
-                    self.value_M2, x_coords_list_teor, diameters_list_teor = calculator_M2(self.x_coords_list, 
-                                                                                           self.diameters_list, 
-                                                                                           (self.wave_length * 10**-9))
+                self.diameters_list = [0.361,0.347,0.303,0.268,0.232,0.19,0.181,0.167,0.144,0.132,0.121,0.113,0.111,0.112,0.112,0.12,0.118,0.133,0.146,0.184,0.212,0.238]
+                
+                if len(self.diameters_list) >= 4:
+                    
+                    self.x_coords_list = [17.9, 19.9, 21.9, 23.9, 25.9, 27.9,
+                                          28.9, 29.9, 30.9, 31.9, 32.9, 33.9, 
+                                          34.9, 35.9, 36.9, 37.9, 38.9, 39.9,
+                                          40.9, 42.9, 44.9, 46.9]
+                    (self.value_M2, 
+                     x_coords_list_teor, 
+                     diameters_list_teor) = calculator_M2(self.x_coords_list,
+                                                          self.diameters_list, 
+                                                          (self.wave_length * 10**-9))
+                    self.main_graph.plot(x_coords_list_teor, diameters_list_teor)
+                    self.M2_line.setText(str(self.value_M2))
                 
                 move_to_coords(self.device_x, self.device_y, 
                                ((self.step_along_value) * (j + 1),0), 

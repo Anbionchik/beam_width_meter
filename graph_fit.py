@@ -51,7 +51,12 @@ def find_intersection(x, y1, y2):
         return intersection.xy
     
 def quadratic_sqrt(x, a, b, c):
-    return np.sqrt(a + b * x + c * x**2)
+    try:
+        return np.sqrt(a + b * x + c * x**2)
+    except Exception as e:
+        print(str(e))
+        print(x, a, b, c)
+    
 
 def calculator_M2(x_array, y_array, wave_length):
     popx, pcov = curve_fit(quadratic_sqrt, x_array, y_array, (1., 0.02, 0.0001), maxfev=10**6)
@@ -59,7 +64,7 @@ def calculator_M2(x_array, y_array, wave_length):
     lambdaP = wave_length * 1e3
     M2 = round(np.pi / (8 * lambdaP) * np.sqrt(4 * a * c - b**2), 2)
     
-    x_teor = np.linspace(x_array[0], x_array[-1], 1000)
+    x_teor = np.linspace(x_array[0], x_array[-1], 100)
     y_teor = quadratic_sqrt(x_teor, a, b, c)
     
     return M2, x_teor, y_teor
