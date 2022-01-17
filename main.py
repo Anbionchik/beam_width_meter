@@ -588,10 +588,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.show_info(shw_line)
                     point_number += 1
                 
-                if self.diameter_line.text() != "":
-                    #TODO убрать
-                    #self.diameters_list.append(float(self.diameter_line.text()))
-                    #self.x_coords_list.append(x_pos)
+                if self.diameter_line.text() != "":                    
+                    self.diameters_list.append(float(self.diameter_line.text()))
+                    self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
@@ -603,14 +602,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     pass
                 self.diameter_line.clear()
                 
-                self.diameters_list = [0.361,0.347,0.303,0.268,0.232,0.19,0.181,0.167,0.144,0.132,0.121,0.113,0.111,0.112,0.112,0.12,0.118,0.133,0.146,0.184,0.212,0.238]
-                
                 if len(self.diameters_list) >= 4:
                     
-                    self.x_coords_list = [17.9, 19.9, 21.9, 23.9, 25.9, 27.9,
-                                          28.9, 29.9, 30.9, 31.9, 32.9, 33.9, 
-                                          34.9, 35.9, 36.9, 37.9, 38.9, 39.9,
-                                          40.9, 42.9, 44.9, 46.9]
                     (self.value_M2, 
                      x_coords_list_teor, 
                      diameters_list_teor) = calculator_M2(self.x_coords_list,
