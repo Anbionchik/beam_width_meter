@@ -529,7 +529,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         return
                     
                     if not beam_end_point is None:
-                        if i - beam_end_point[0] > 10:
+                        if i - beam_end_point[0] > 20:
                             break
                     
                     self.update()
