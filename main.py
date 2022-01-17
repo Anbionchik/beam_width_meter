@@ -80,7 +80,7 @@ powermeter_com_port = ''
 
 connection_type = 'Ethernet'
 
-commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'CORR:WAV?', 'CORR:WAV'), 
+commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR:WAV'), 
                  'maestro':('*VER?', '*CVU', '*GWL', '*PWC')}
 
 
@@ -101,6 +101,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
+        self.value_M2 = None
         
         
         
@@ -232,8 +233,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def get_wave_length(self):
         if connection_type == 'USB':
-            wavelength = self.my_instrument.query(
-                commands_dict[self.device][2]).rstrip('\r\n').split()[1]
+            if self.device == 'maestro':
+                
+                wavelength = self.my_instrument.query(
+                    commands_dict[self.device][2]).rstrip('\r\n').split()[1]
+            else:
+                wavelength = self.my_instrument.query(
+                    commands_dict[self.device][2]).rstrip('\r\n')
             return wavelength           
         else:
             self.tcp_socket.send(str.encode("*GWL"))
@@ -528,7 +534,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         
                         return
                     
-                    if not beam_end_point is None:
+                    if not beam_end_point is None and self.diameter_line.text() != "":
                         if i - beam_end_point[0] > 20:
                             break
                     
@@ -593,6 +599,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
+                self.main_graph.clear()
                 self.main_graph.plot(self.x_coords_list, self.diameters_list, 
                                      pen=self.main_graph_pen, symbol="o", 
                                      symbolBrush="#44944A", symbolSize=7)
@@ -625,6 +632,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 file.write("{},{},{}\r".format(str(rec), 
                                                str(self.x_coords_list[rec]),
                                                str(self.diameters_list[rec])))
+            if not self.value_M2 is None:
+                file.write(f"M_square = {self.value_M2}\r")
         self.begin_measurment_btn.setEnabled(True)
         self.interrupt_btn.setEnabled(False)
         self.show_info("Измерение завершено.")
