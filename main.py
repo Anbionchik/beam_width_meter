@@ -97,12 +97,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
         self.step_across_value = 0.01
         self.step_along_value = 1  
-        self.wait_time = 3000 # в мс
+        self.wait_time = 1000 # в мс
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
         self.value_M2 = None
-        self.faster_flag = False
+        self.default_sigma = 0.3
+        self.faster_flag = True
         
         
         
@@ -435,7 +436,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def draw_gauss(self, start_point, end_point):
         if not end_point is None and not start_point is None:
-            sigma = end_point[1] - start_point[1]
+            if self.default_sigma:
+                sigma = self.default_sigma
+            else:
+                sigma = end_point[1] - start_point[1]
+            
             gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
         else:
             gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
@@ -482,7 +487,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 if len(intersection_list[0]) == 2:
                     diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
                     self.diameter_line.setText(str(diameter))
-                    self.diameter_edge_array = intersection_list[0]
+                    #Проверка на то, что значение диаметра не отличается от предыдущего более чем на 50%
+                    if self.diameters_list:
+                        if abs(self.diameters_list[-1] - diameter < self.diameters_list[-1] * 0.5):
+                            self.inner_diameters_list.append(diameter)
+                            self.diameter_edge_array = intersection_list[0]
+                    else:
+                        self.diameter_edge_array = intersection_list[0]
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -512,12 +523,15 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         
             for j in range(self.steps_along):
                 
+                self.inner_diameters_list = []
                 self.power_list = []
                 #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
                 if self.faster_flag and j > 0:
-                    range_start_value = self.diameter_edge_array[0] - 20 if self.diameter_edge_array[0] - 20 > 0 else 0
-                    range_end_value = self.diameter_edge_array[1] + 20 if self.diameter_edge_array[1] + 20 < self.steps_across else self.steps_across
-                    across_range = range(beam_start_point[0] - 20, beam_end_point[0] + 20)
+                    diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
+                    diameter_end_point = self.diameter_edge_array[1] // self.step_across_value
+                    range_start_value =  diameter_start_point - 25 if diameter_start_point > 25 else 0
+                    range_end_value = diameter_end_point + 25 if diameter_end_point + 25 < self.steps_across else self.steps_across
+                    across_range = range(int(range_start_value), int(range_end_value))
                 else:
                     across_range = range(self.steps_across)
                 
@@ -588,7 +602,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                             beam_end_point = (i, y_pos)
                             print(beam_end_point)
                     
-                    if i > 1:
+                    
+                    if self.faster_flag and j > 0:
+                        if i > int(range_start_value) + 1:
+                            self.draw_gauss(beam_start_point, beam_end_point)
+                    elif i > 3:
                         self.draw_gauss(beam_start_point, beam_end_point)
                         
                     self.draw_power(beam_start_point, beam_end_point)
@@ -606,7 +624,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     point_number += 1
                 
                 if self.diameter_line.text() != "":                    
-                    self.diameters_list.append(float(self.diameter_line.text()))
+                    if self.inner_diameters_list:
+                        self.diameters_list.append(float(self.inner_diameters_list[-1]))
+                    else:
+                        self.diameters_list.append(float(self.diameter_line.text()))
                     self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
