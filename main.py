@@ -97,7 +97,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
         self.step_across_value = 0.01
         self.step_along_value = 1  
-        self.wait_time = 1000 # в мс
+        self.wait_time = 3000 # в мс
         self.beam_threshold = 0.3
         self.steps_across = 38
         self.steps_along = 1
@@ -535,7 +535,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         return
                     
                     if not beam_end_point is None and self.diameter_line.text() != "":
-                        if i - beam_end_point[0] > 20:
+                        if i - beam_end_point[0] > 20 and i > (self.steps_across * 0.65):
                             break
                     
                     self.update()
