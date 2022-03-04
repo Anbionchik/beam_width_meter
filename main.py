@@ -102,6 +102,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.steps_across = 38
         self.steps_along = 1
         self.value_M2 = None
+        self.faster_flag = False
         
         
         
@@ -481,6 +482,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 if len(intersection_list[0]) == 2:
                     diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
                     self.diameter_line.setText(str(diameter))
+                    self.diameter_edge_array = intersection_list[0]
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
@@ -511,12 +513,20 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             for j in range(self.steps_along):
                 
                 self.power_list = []
+                #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
+                if self.faster_flag and j > 0:
+                    range_start_value = self.diameter_edge_array[0] - 20 if self.diameter_edge_array[0] - 20 > 0 else 0
+                    range_end_value = self.diameter_edge_array[1] + 20 if self.diameter_edge_array[1] + 20 < self.steps_across else self.steps_across
+                    across_range = range(beam_start_point[0] - 20, beam_end_point[0] + 20)
+                else:
+                    across_range = range(self.steps_across)
+                
                 beam_start_point = None
                 beam_end_point = None
                 self.local_coords_list = []
                 self.gauss_graph.clear()
                 
-                for i in range(self.steps_across):
+                for i in across_range:
                     
                     if self.interrupt_measurment_flag:
                         
@@ -533,10 +543,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                                                    str(self.diameters_list[rec])))
                         
                         return
-                    
-                    if not beam_end_point is None and self.diameter_line.text() != "":
-                        if i - beam_end_point[0] > 20 and i > (self.steps_across * 0.65):
-                            break
+                    #Преждевременный выход первые три цикла только после 65% точек
+                    if not self.faster_flag:                        
+                        if not beam_end_point is None and self.diameter_line.text() != "":
+                            if i - beam_end_point[0] > 20 and j < 3 and i > (self.steps_across * 0.65):
+                                break
                     
                     self.update()
                     QtWidgets.QApplication.processEvents()
