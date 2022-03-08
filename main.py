@@ -172,6 +172,24 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.gauss_graph.setLabel('left', "P', мм")
         self.gauss_graph.setLabel('bottom', 'X, мм')
         
+        self.power_line = self.line_graph.plot([], [], 
+                             pen=self.yellow_pen,
+                             symbol="t", symbolBrush="#6A5ACD", 
+                             symbolSize=2)
+        
+        self.gauss_points = self.gauss_graph.plot([], [], pen=None, 
+                             symbol="o", symbolBrush="#0000AA", 
+                             symbolSize=4)
+        self.gauss_curve = self.gauss_graph.plot([], [], 
+                             pen=self.purple_pen,
+                             symbol="t", symbolBrush="#0000AA", 
+                             symbolSize=2)
+        self.intersection_points = self.gauss_graph.plot([], pen=None,
+                              symbol='x', symbolBrush="7CFC00",
+                              symbolSize=8)
+        
+        
+        
             
         self.power_list = []
 
@@ -404,58 +422,30 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             test_run(self.device_y, self.user_unit)
             self.draw_coords()
     
-    def draw_coords(self, coords=None):
-        # if coords is None:
-        #     x_pos, y_pos = map(round, get_position(self.device_x, 
-        #                                 self.device_y, 
-        #                                 self.user_unit), [4,4])
-        #     self.translator_move_history[0].append(x_pos)
-        #     self.translator_move_history[1].append(y_pos)
-        # else:
-        #     self.translator_move_history[0].append(coords[0])
-        #     self.translator_move_history[1].append(coords[1])
-        # self.translator_coords_graph.plot(self.translator_move_history[0], 
-        #                                   self.translator_move_history[1],
-        #                                   pen=self.green_pen,
-        #                                   symbol="o", symbolBrush="#6A5ACD", 
-        #                                   symbolSize=3)
+    def draw_coords(self, coords=None):       
         if coords is None:
             x_pos, y_pos = map(round, get_position(self.device_x, 
                                         self.device_y, 
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
             self.translator_move_history[1].append(y_pos)
-            self.translator_coords_graph.plot((x_pos,), 
-                                              (y_pos,),
-                                              pen=self.green_pen,
-                                              symbol="o", symbolBrush="#6A5ACD", 
-                                              symbolSize=3)
+             
         else:
             self.translator_move_history[0].append(coords[0])
             self.translator_move_history[1].append(coords[1])
-            self.translator_coords_graph.plot((coords[0],), 
-                                              (coords[1],),
-                                              pen=self.green_pen,
-                                              symbol="o", symbolBrush="#6A5ACD", 
-                                              symbolSize=3)
-        
+
+        self.coords_line.setData(self.translator_move_history[0], 
+                                          self.translator_move_history[1])
         
     
     def draw_power(self, start_point, end_point):
         if not start_point is None and start_point[0] > 10:
             crds_list = self.local_coords_list[start_point[0] - 10:]
             pwr_list = self.power_list[start_point[0] - 10:]
-            self.line_graph.clear()
-            self.line_graph.plot(crds_list, pwr_list, 
-                                 pen=self.yellow_pen,
-                                 symbol="t", symbolBrush="#6A5ACD", 
-                                 symbolSize=2)
+            self.power_line.setData(crds_list, pwr_list)
+            
         else:
-            self.line_graph.clear()
-            self.line_graph.plot(self.local_coords_list, self.power_list, 
-                                 pen=self.yellow_pen,
-                                 symbol="t", symbolBrush="#6A5ACD", 
-                                 symbolSize=2)
+            self.power_line.setData(self.local_coords_list, self.power_list)
     
     
     def draw_gauss(self, start_point, end_point):
@@ -480,25 +470,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             if gauss_fit is not None:
                 gauss_list = gauss_fit[:]
         
-        if gauss_fit is None:
-            # self.gauss_graph.clear()
-            self.gauss_graph.plot((crds_list[-2],), (y_list[-2],), pen=None, 
-                                 symbol="o", symbolBrush="#0000AA", 
-                                 symbolSize=4)
-            
+        if gauss_fit is None: 
+            self.gauss_points.setData(crds_list[:-1], y_list[:-1])
         else:
-            try:
-                self.line_gauss.clear()
-            except AttributeError:
-                pass
-            # self.gauss_graph.clear()
-            self.line_gauss = self.gauss_graph.plot(crds_list, gauss_list, 
-                                 pen=self.purple_pen,
-                                 symbol="t", symbolBrush="#0000AA", 
-                                 symbolSize=2)
-            self.gauss_graph.plot((crds_list[-2],), (y_list[-2],), pen=None, 
-                                 symbol="o", symbolBrush="#0000AA", 
-                                 symbolSize=4)
+            self.gauss_curve.setData(crds_list, gauss_list)
+            self.gauss_points.setData(crds_list[:-1], y_list[:-1])
+        
         if not end_point is None:
             self.find_diameter(self.local_coords_list, gauss_fit)
         
@@ -510,9 +487,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             
             intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
             if not intersection_list is None:            
-                self.gauss_graph.plot(*intersection_list, pen=None,
-                                      symbol='x', symbolBrush="7CFC00",
-                                      symbolSize=8)
+                self.intersection_points.setData(*intersection_list)
                 if len(intersection_list[0]) == 2:
                     diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
                     self.diameter_line.setText(str(diameter))
@@ -545,6 +520,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.params_setter()
         self.main_graph.clear()
         self.translator_coords_graph.clear()
+        self.coords_line = self.translator_coords_graph.plot([], 
+                                          [],
+                                          pen=self.green_pen,
+                                          symbol="o", symbolBrush="#6A5ACD", 
+                                          symbolSize=3)
         self.translator_move_history = [[],[]]
         self.diameters_list = []
         self.x_coords_list = []
@@ -580,7 +560,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 beam_start_point = None
                 beam_end_point = None
                 self.local_coords_list = []
-                self.gauss_graph.clear()
+
+                
                 
                 for i in across_range:
                     
