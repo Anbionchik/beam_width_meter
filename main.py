@@ -408,14 +408,19 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
             self.translator_move_history[1].append(y_pos)
+            self.translator_coords_graph.plot((x_pos,), 
+                                              (y_pos,),
+                                              pen=self.green_pen,
+                                              symbol="o", symbolBrush="#6A5ACD", 
+                                              symbolSize=3)
         else:
             self.translator_move_history[0].append(coords[0])
             self.translator_move_history[1].append(coords[1])
-        self.translator_coords_graph.plot(self.translator_move_history[0], 
-                                          self.translator_move_history[1],
-                                          pen=self.green_pen,
-                                          symbol="o", symbolBrush="#6A5ACD", 
-                                          symbolSize=3)
+            self.translator_coords_graph.plot((coords[0],), 
+                                              (coords[1],),
+                                              pen=self.green_pen,
+                                              symbol="o", symbolBrush="#6A5ACD", 
+                                              symbolSize=3)
     
     def draw_power(self, start_point, end_point, faster_flag):
         if not faster_flag and not start_point is None and start_point[0] > 10:
@@ -432,6 +437,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                  pen=self.yellow_pen,
                                  symbol="t", symbolBrush="#6A5ACD", 
                                  symbolSize=2)
+            
     
     
     def draw_gauss(self, start_point, end_point, faster_flag):
