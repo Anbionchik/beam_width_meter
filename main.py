@@ -405,20 +405,41 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.draw_coords()
     
     def draw_coords(self, coords=None):
+        # if coords is None:
+        #     x_pos, y_pos = map(round, get_position(self.device_x, 
+        #                                 self.device_y, 
+        #                                 self.user_unit), [4,4])
+        #     self.translator_move_history[0].append(x_pos)
+        #     self.translator_move_history[1].append(y_pos)
+        # else:
+        #     self.translator_move_history[0].append(coords[0])
+        #     self.translator_move_history[1].append(coords[1])
+        # self.translator_coords_graph.plot(self.translator_move_history[0], 
+        #                                   self.translator_move_history[1],
+        #                                   pen=self.green_pen,
+        #                                   symbol="o", symbolBrush="#6A5ACD", 
+        #                                   symbolSize=3)
         if coords is None:
             x_pos, y_pos = map(round, get_position(self.device_x, 
                                         self.device_y, 
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
             self.translator_move_history[1].append(y_pos)
+            self.translator_coords_graph.plot((x_pos,), 
+                                              (y_pos,),
+                                              pen=self.green_pen,
+                                              symbol="o", symbolBrush="#6A5ACD", 
+                                              symbolSize=3)
         else:
             self.translator_move_history[0].append(coords[0])
             self.translator_move_history[1].append(coords[1])
-        self.translator_coords_graph.plot(self.translator_move_history[0], 
-                                          self.translator_move_history[1],
-                                          pen=self.green_pen,
-                                          symbol="o", symbolBrush="#6A5ACD", 
-                                          symbolSize=3)
+            self.translator_coords_graph.plot((coords[0],), 
+                                              (coords[1],),
+                                              pen=self.green_pen,
+                                              symbol="o", symbolBrush="#6A5ACD", 
+                                              symbolSize=3)
+        
+        
     
     def draw_power(self, start_point, end_point):
         if not start_point is None and start_point[0] > 10:
@@ -460,17 +481,22 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 gauss_list = gauss_fit[:]
         
         if gauss_fit is None:
-            self.gauss_graph.clear()
-            self.gauss_graph.plot(crds_list, y_list, pen=None, 
+            # self.gauss_graph.clear()
+            self.gauss_graph.plot((crds_list[-2],), (y_list[-2],), pen=None, 
                                  symbol="o", symbolBrush="#0000AA", 
                                  symbolSize=4)
+            
         else:
-            self.gauss_graph.clear()
-            self.gauss_graph.plot(crds_list, gauss_list, 
+            try:
+                self.line_gauss.clear()
+            except AttributeError:
+                pass
+            # self.gauss_graph.clear()
+            self.line_gauss = self.gauss_graph.plot(crds_list, gauss_list, 
                                  pen=self.purple_pen,
                                  symbol="t", symbolBrush="#0000AA", 
                                  symbolSize=2)
-            self.gauss_graph.plot(crds_list, y_list, pen=None, 
+            self.gauss_graph.plot((crds_list[-2],), (y_list[-2],), pen=None, 
                                  symbol="o", symbolBrush="#0000AA", 
                                  symbolSize=4)
         if not end_point is None:
@@ -561,7 +587,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     if self.interrupt_measurment_flag:
                         
                         self.show_info("Измерение прервано")
-                        move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
+                        # move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
                         self.begin_measurment_btn.setEnabled(True)
                         self.interrupt_btn.setEnabled(False)
                         if self.diameters_list:                            
