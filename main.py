@@ -485,7 +485,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                       symbol='x', symbolBrush="7CFC00",
                                       symbolSize=8)
                 if len(intersection_list[0]) == 2:
-                    diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
+                    diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]), 4)
                     self.diameter_line.setText(str(diameter))
                     #Проверка на то, что значение диаметра не отличается от предыдущего более чем на 50%
                     if self.diameters_list:
