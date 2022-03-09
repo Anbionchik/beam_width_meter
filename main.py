@@ -158,16 +158,40 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.translator_coords_graph.setTitle("Положение подвижки")
         self.translator_coords_graph.setLabel('left', 'Y, мм')
         self.translator_coords_graph.setLabel('bottom', 'X, мм')
+        self.coords_line = self.translator_coords_graph.plot([], 
+                                          [],
+                                          pen=self.green_pen,
+                                          symbol="o", symbolBrush="#6A5ACD", 
+                                          symbolSize=3)
         
         self.line_graph.setBackground("#293133")
         self.line_graph.setTitle("Значение мощности")
         self.line_graph.setLabel('left', 'P, W')
         self.line_graph.setLabel('bottom', 'X, мм')
+        self.power_line = self.line_graph.plot([], [], 
+                             pen=self.yellow_pen,
+                             symbol="t", symbolBrush="#6A5ACD", 
+                             symbolSize=2)
         
         self.gauss_graph.setBackground("#293133")
         self.gauss_graph.setTitle("Производная мощности")
         self.gauss_graph.setLabel('left', "P', мм")
         self.gauss_graph.setLabel('bottom', 'X, мм')
+        self.gauss_points = self.gauss_graph.plot([], [], pen=None, 
+                             symbol="o", symbolBrush="#0000AA", 
+                             symbolSize=4)
+        self.gauss_curve = self.gauss_graph.plot([], [], 
+                             pen=self.purple_pen,
+                             symbol="t", symbolBrush="#0000AA", 
+                             symbolSize=2)
+        self.intersection_points = self.gauss_graph.plot([], pen=None,
+                              symbol='x', symbolBrush="7CFC00",
+                              symbolSize=8)
+        
+        #Добавление графиков
+        
+        
+        
         
             
         self.power_list = []
@@ -411,30 +435,21 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         else:
             self.translator_move_history[0].append(coords[0])
             self.translator_move_history[1].append(coords[1])
-        self.translator_coords_graph.plot(self.translator_move_history[0], 
-                                          self.translator_move_history[1],
-                                          pen=self.green_pen,
-                                          symbol="o", symbolBrush="#6A5ACD", 
-                                          symbolSize=3)
+            self.coords_line.setData(self.translator_move_history[0], 
+                                     self.translator_move_history[1])
     
-    def draw_power(self, start_point, end_point):
-        if not start_point is None and start_point[0] > 10:
+    def draw_power(self, start_point, end_point, faster_flag):
+        if not faster_flag and not start_point is None and start_point[0] > 10:
             crds_list = self.local_coords_list[start_point[0] - 10:]
             pwr_list = self.power_list[start_point[0] - 10:]
-            self.line_graph.clear()
-            self.line_graph.plot(crds_list, pwr_list, 
-                                 pen=self.yellow_pen,
-                                 symbol="t", symbolBrush="#6A5ACD", 
-                                 symbolSize=2)
+            self.power_line.setData(crds_list, pwr_list)
         else:
-            self.line_graph.clear()
-            self.line_graph.plot(self.local_coords_list, self.power_list, 
-                                 pen=self.yellow_pen,
-                                 symbol="t", symbolBrush="#6A5ACD", 
-                                 symbolSize=2)
+            self.power_line.setData(self.local_coords_list, self.power_list)
+        
+            
     
     
-    def draw_gauss(self, start_point, end_point):
+    def draw_gauss(self, start_point, end_point, faster_flag):
         if not end_point is None and not start_point is None:
             if self.default_sigma:
                 sigma = self.default_sigma
@@ -445,7 +460,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         else:
             gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
         
-        if not start_point is None and start_point[0] > 7:
+        if not faster_flag and not start_point is None and start_point[0] > 7:
             crds_list = self.local_coords_list[start_point[0] - 7:]
             y_list = y[start_point[0] - 7:]
             if gauss_fit is not None:
@@ -457,19 +472,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 gauss_list = gauss_fit[:]
         
         if gauss_fit is None:
-            self.gauss_graph.clear()
-            self.gauss_graph.plot(crds_list, y_list, pen=None, 
-                                 symbol="o", symbolBrush="#0000AA", 
-                                 symbolSize=4)
+            self.gauss_points.setData(crds_list[:-1], y_list[:-1])
         else:
-            self.gauss_graph.clear()
-            self.gauss_graph.plot(crds_list, gauss_list, 
-                                 pen=self.purple_pen,
-                                 symbol="t", symbolBrush="#0000AA", 
-                                 symbolSize=2)
-            self.gauss_graph.plot(crds_list, y_list, pen=None, 
-                                 symbol="o", symbolBrush="#0000AA", 
-                                 symbolSize=4)
+            self.gauss_curve.setData(crds_list, gauss_list)
+            self.gauss_points.setData(crds_list[:-1], y_list[:-1])
         if not end_point is None:
             self.find_diameter(self.local_coords_list, gauss_fit)
         
@@ -507,7 +513,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
         self.main_graph.clear()
-        self.translator_coords_graph.clear()
         self.translator_move_history = [[],[]]
         self.diameters_list = []
         self.x_coords_list = []
@@ -538,7 +543,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 beam_start_point = None
                 beam_end_point = None
                 self.local_coords_list = []
-                self.gauss_graph.clear()
                 
                 for i in across_range:
                     
@@ -590,14 +594,17 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     self.local_coords_list.append(y_pos)
                     
-                    if beam_start_point is None and len(self.power_list) > 2:
-                        if (self.power_list[-1] - self.power_list[-2]) / self.step_across_value > self.beam_threshold:
+                    if beam_start_point is None and len(self.power_list) > 6:
+                        if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
+                            mean(self.power_list[-6:-3]) > self.beam_threshold):
+                            
                             beam_start_point = (i, y_pos)
                             print(beam_start_point)
+                    
                     elif not beam_start_point is None and beam_end_point is None:
-                        if (((self.power_list[-1] - self.power_list[-2]) / 
-                            self.step_across_value < self.beam_threshold) or
-                        (self.steps_across - i < 10)):
+                        if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
+                            mean(self.power_list[-6:-3]) < self.beam_threshold 
+                            or (self.steps_across - i < 10)):
                             
                             beam_end_point = (i, y_pos)
                             print(beam_end_point)
@@ -605,11 +612,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                     if self.faster_flag and j > 0:
                         if i > int(range_start_value) + 1:
-                            self.draw_gauss(beam_start_point, beam_end_point)
+                            self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
                     elif i > 3:
-                        self.draw_gauss(beam_start_point, beam_end_point)
+                        self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
                         
-                    self.draw_power(beam_start_point, beam_end_point)
+                    self.draw_power(beam_start_point, beam_end_point, self.faster_flag)
                     self.draw_coords((x_pos, y_pos))
                     time_now = time.strftime("%M:%S", time.localtime())
                     line = (str(point_number) + "," + time_now + "," + 
