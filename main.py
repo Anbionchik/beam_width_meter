@@ -487,9 +487,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             
             intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
             if not intersection_list is None:            
-                self.gauss_graph.plot(*intersection_list, pen=None,
-                                      symbol='x', symbolBrush="7CFC00",
-                                      symbolSize=8)
+                self.intersection_points.setData(*intersection_list)
                 if len(intersection_list[0]) == 2:
                     diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]), 4)
                     self.diameter_line.setText(str(diameter))
