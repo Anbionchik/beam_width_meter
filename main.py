@@ -155,6 +155,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.setLabel('left', 'Ширина пучка, мм')
         self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
         self.main_graph.addLegend()
+        self.main_points = self.main_graph.plot([], [], 
+                             pen=self.main_graph_pen, symbol="o", 
+                             symbolBrush="#44944A", symbolSize=7)
+        self.main_curve = self.main_graph.plot([],[])
+        
+        self.main_points.sigPointsClicked.connect(self.print_points_clicked)
         
         
         self.translator_coords_graph.setBackground("#293133")
@@ -489,7 +495,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             if not intersection_list is None:            
                 self.intersection_points.setData(*intersection_list)
                 if len(intersection_list[0]) == 2:
-                    diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]) * 2, 4)
+                    diameter = round(abs(intersection_list[0][1] - intersection_list[0][0]), 4)
                     self.diameter_line.setText(str(diameter))
                     #Проверка на то, что значение диаметра не отличается от предыдущего более чем на 50%
                     if self.diameters_list:
@@ -518,7 +524,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.setEnabled(True)
         self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
-        self.main_graph.clear()
         self.translator_coords_graph.clear()
         self.coords_line = self.translator_coords_graph.plot([], 
                                           [],
@@ -660,10 +665,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
-                self.main_graph.clear()
-                self.main_graph.plot(self.x_coords_list, self.diameters_list, 
-                                     pen=self.main_graph_pen, symbol="o", 
-                                     symbolBrush="#44944A", symbolSize=7)
+
+                self.main_points.setData(self.x_coords_list, self.diameters_list)
                 try:
                     self.main_graph.setYRange(0, max(self.diameters_list) * 1.2)
                 except ValueError:
@@ -677,7 +680,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                      diameters_list_teor) = calculator_M2(self.x_coords_list,
                                                           self.diameters_list, 
                                                           (self.wave_length * 10**-9))
-                    self.main_graph.plot(x_coords_list_teor, diameters_list_teor)
+                    self.main_curve.setData(x_coords_list_teor, diameters_list_teor)
                     self.M2_line.setText(str(self.value_M2))
                 
                 # move_to_coords(self.device_x, self.device_y, 
@@ -708,6 +711,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def show_info(self, message):
         self.info_field.appendPlainText(message)
+    
+    def print_points_clicked(self, item, points):
+        print(points[0].pos())
+        self.show_info(str(points[0].pos()))
         
     def open_folder(self):
         
