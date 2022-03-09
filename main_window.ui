@@ -749,6 +749,25 @@ border:2px solid #d83526;
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="choose_open_btn">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Открыть</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
