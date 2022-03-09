@@ -100,7 +100,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_value = 1  
         self.wait_time = 1000 # в мс
         self.beam_threshold = 0.3
-        self.steps_across = 38
+        self.steps_across = 200
         self.steps_along = 1
         self.value_M2 = None
         self.default_sigma = 0.3
@@ -512,7 +512,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def execute_measurment(self):
         
-        df = pd.read_csv('05.03.22 08_32_15 raw_results.csv')
+        df = pd.read_csv('09.03.22 09_18_01 raw_results.csv')
 
         x_coords = pd.unique(df['X_pos'])
         
