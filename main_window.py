@@ -2,13 +2,11 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -482,6 +480,11 @@ class Ui_MainWindow(object):
         self.choose_folder_btn.setText("")
         self.choose_folder_btn.setObjectName("choose_folder_btn")
         self.horizontalLayout_2.addWidget(self.choose_folder_btn)
+        self.choose_open_btn = QtWidgets.QPushButton(self.centralwidget)
+        self.choose_open_btn.setMinimumSize(QtCore.QSize(100, 0))
+        self.choose_open_btn.setMaximumSize(QtCore.QSize(16777215, 20))
+        self.choose_open_btn.setObjectName("choose_open_btn")
+        self.horizontalLayout_2.addWidget(self.choose_open_btn)
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -534,6 +537,8 @@ class Ui_MainWindow(object):
         self.begin_measurment_btn.setText(_translate("MainWindow", "Начать измерение"))
         self.interrupt_btn.setText(_translate("MainWindow", "Прервать измерение"))
         self.label_3.setText(_translate("MainWindow", "Путь сохранения"))
+        self.choose_open_btn.setText(_translate("MainWindow", "Открыть"))
         self.menu.setTitle(_translate("MainWindow", "Подключение"))
         self.powermeter_action.setText(_translate("MainWindow", "Подключение измерителя"))
+
 from pyqtgraph import PlotWidget

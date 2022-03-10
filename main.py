@@ -13,6 +13,7 @@ from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
+import pandas as pd
 
 from statistics import mean
 import platform
@@ -129,6 +130,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
         self.choose_folder_btn.clicked.connect(self.open_folder)
+        self.choose_open_btn.clicked.connect(self.open_record)
         self.wave_length_line.editingFinished.connect(self.set_wave_length)
         
         
@@ -152,6 +154,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_graph.setLabel('left', 'Ширина пучка, мм')
         self.main_graph.setLabel('bottom', 'Смещение вдоль пучка, мм')
         self.main_graph.addLegend()
+        self.main_points = self.main_graph.plot([], [], 
+                             pen=self.main_graph_pen, symbol="o", 
+                             symbolBrush="#44944A", symbolSize=7)
+        self.main_points.sigPointsClicked.connect(self.print_points_clicked)
+        self.main_curve = self.main_graph.plot([],[])
+        
+        
         
         
         self.translator_coords_graph.setBackground("#293133")
@@ -204,7 +213,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                powermeter_port,
                                powermeter_baud_rate)
         result_code = dlg.exec_() 
-        print(result_code)        
+        print(result_code) 
+    
         
         
     def connect_powermeter(self):
@@ -425,6 +435,26 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             test_run(self.device_y, self.user_unit)
             self.draw_coords()
     
+    def draw_main(self):
+        
+        self.main_points.setData(self.x_coords_list, self.diameters_list)
+        
+        try:
+            self.main_graph.setYRange(0, max(self.diameters_list) * 1.2)
+        except ValueError:
+            pass
+        
+        
+        if len(self.diameters_list) >= 4:
+            
+            (self.value_M2, 
+             x_coords_list_teor, 
+             diameters_list_teor) = calculator_M2(self.x_coords_list,
+                                                  self.diameters_list, 
+                                                  (self.wave_length * 10**-9))
+            self.main_curve.setData(x_coords_list_teor, diameters_list_teor)
+            self.M2_line.setText(str(self.value_M2))
+    
     def draw_coords(self, coords=None):
         if coords is None:
             x_pos, y_pos = map(round, get_position(self.device_x, 
@@ -432,6 +462,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
             self.translator_move_history[1].append(y_pos)
+        elif coords == "demo":
+            self.coords_line.setData(self.translator_move_history[0], 
+                                     self.translator_move_history[1])
         else:
             self.translator_move_history[0].append(coords[0])
             self.translator_move_history[1].append(coords[1])
@@ -494,7 +527,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     #Проверка на то, что значение диаметра не отличается от предыдущего более чем на 50%
                     if self.diameters_list:
                         if abs(self.diameters_list[-1] - diameter < self.diameters_list[-1] * 0.5):
-                            self.inner_diameters_list.append(diameter)
+                            try:
+                                self.inner_diameters_list.append(diameter)
+                            except AttributeError:
+                                print("Нет списка диаметров")
                             self.diameter_edge_array = intersection_list[0]
                     else:
                         self.diameter_edge_array = intersection_list[0]
@@ -510,7 +546,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.setEnabled(True)
         self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
-        self.main_graph.clear()
+        self.main_points.setData([],[])
+        self.main_curve.setData([],[])
         self.translator_move_history = [[],[]]
         self.diameters_list = []
         self.x_coords_list = []
@@ -636,25 +673,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.x_coords_list.append(x_pos)
                     self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
                 
-                self.main_graph.clear()
-                self.main_graph.plot(self.x_coords_list, self.diameters_list, 
-                                     pen=self.main_graph_pen, symbol="o", 
-                                     symbolBrush="#44944A", symbolSize=7)
-                try:
-                    self.main_graph.setYRange(0, max(self.diameters_list) * 1.2)
-                except ValueError:
-                    pass
                 self.diameter_line.clear()
-                
-                if len(self.diameters_list) >= 4:
-                    
-                    (self.value_M2, 
-                     x_coords_list_teor, 
-                     diameters_list_teor) = calculator_M2(self.x_coords_list,
-                                                          self.diameters_list, 
-                                                          (self.wave_length * 10**-9))
-                    self.main_graph.plot(x_coords_list_teor, diameters_list_teor)
-                    self.M2_line.setText(str(self.value_M2))
+                self.draw_main()
                 
                 move_to_coords(self.device_x, self.device_y, 
                                ((self.step_along_value) * (j + 1),0), 
@@ -671,6 +691,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                                str(self.diameters_list[rec])))
             if not self.value_M2 is None:
                 file.write(f"M_square = {self.value_M2}\r")
+            file_write(f'Wave_length = {self.wave_length}\r')
         self.begin_measurment_btn.setEnabled(True)
         self.interrupt_btn.setEnabled(False)
         self.show_info("Измерение завершено.")
@@ -684,7 +705,51 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
     def show_info(self, message):
         self.info_field.appendPlainText(message)
+    
+    def open_record(self):
+        user_record = QtWidgets.QFileDialog.getOpenFileName(self, "Choose Results file", '',  
+                                                                 'Results files (*raw_results.csv)')
+        if user_record[0]:            
+            self.show_info(f'Выбран файл {user_record[0]}')            
+            self.process_record(user_record)
+        else:
+            self.show_info("Файл не выбран")
+            
+    def process_record(self, user_record):
+        self.main_points.setData(symbolBrush="#44944A")
+        try:
+            self.main_df = pd.read_csv(user_record[0].replace("raw_results", "Results"))
+        except FileNotFoundError:
+            self.show_info(f'Файла {user_record[0].replace("raw_results", "Results")} не существует')
+            return
+        self.raw_df = pd.read_csv(user_record[0])
+        self.x_coords_list = list(self.main_df['X_pos'][self.main_df['X_pos'].notna()])
+        self.diameters_list = list(self.main_df['Diameter'][self.main_df['Diameter'].notna()])
+        self.translator_move_history = [self.raw_df['X_pos'],self.raw_df['Y_pos']]
+        #TODO УРАТЬ!!!
+        self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
         
+        self.draw_main()
+        self.draw_coords('demo')
+        
+    def print_points_clicked(self, item, points):
+        data_list = list(item.getData()[0])
+        mypoint = points[0].pos()[0]
+        mypoint_index = data_list.index(mypoint)
+
+        symbolBrushs = [None] * len(data_list)
+        symbolBrushs[mypoint_index] = pg.mkBrush(color=(255, 0, 0))
+        self.main_points.setData(symbolBrush=symbolBrushs)
+        
+        self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Y_pos'])
+        self.power_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Value'])
+        
+        self.draw_power(None, None, True)
+        self.draw_gauss(None, True, True)
+        print(points[0].pos())
+        self.show_info(str(points[0].pos()))        
+        
+    
     def open_folder(self):
         
         self.folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 
