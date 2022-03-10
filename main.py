@@ -546,6 +546,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.setEnabled(True)
         self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
+        self.main_points.setData(symbolBrush="#44944A")
         self.main_points.setData([],[])
         self.main_curve.setData([],[])
         self.translator_move_history = [[],[]]
