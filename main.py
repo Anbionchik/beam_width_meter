@@ -557,7 +557,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
         point_number = 1
-        with open(self.folder_name + time_file_name + " raw_results.csv", "w") as file:
+        with open(self.folder_name + "/" + time_file_name + " raw_results.csv", "w") as file:
             
             file.write("N,Time,X_pos,Y_pos,Value\r")
             set_zero(self.device_x, self.device_y)
@@ -589,7 +589,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         self.begin_measurment_btn.setEnabled(True)
                         self.interrupt_btn.setEnabled(False)
                         if self.diameters_list:                            
-                            with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
+                            with open(self.folder_name + "/" + time_file_name + " Results.csv", "w") as file:
                                 file.write("N,X_pos,Diameter\r")
                                 for rec in range(len(self.diameters_list)):
                                     file.write("{},{},{}\r".format(str(rec), 
@@ -684,7 +684,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     QtCore.QThread.msleep(10000) 
         
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
-        with open(self.folder_name + time_file_name + " Results.csv", "w") as file:
+        with open(self.folder_name + "/" + time_file_name + " Results.csv", "w") as file:
             file.write("N,X_pos,Diameter\r")
             for rec in range(len(self.diameters_list)):
                 file.write("{},{},{}\r".format(str(rec), 
@@ -692,7 +692,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                                                str(self.diameters_list[rec])))
             if not self.value_M2 is None:
                 file.write(f"M_square = {self.value_M2}\r")
-            file_write(f'Wave_length = {self.wave_length}\r')
+            file.write(f'Wave_length = {self.wave_length}\r')
         self.begin_measurment_btn.setEnabled(True)
         self.interrupt_btn.setEnabled(False)
         self.show_info("Измерение завершено.")
@@ -727,7 +727,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_coords_list = list(self.main_df['X_pos'][self.main_df['X_pos'].notna()])
         self.diameters_list = list(self.main_df['Diameter'][self.main_df['Diameter'].notna()])
         self.translator_move_history = [self.raw_df['X_pos'],self.raw_df['Y_pos']]
-        #TODO УРАТЬ!!!
         self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
         
         self.draw_main()
