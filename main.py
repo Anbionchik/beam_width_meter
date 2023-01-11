@@ -447,13 +447,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         if len(self.diameters_list) >= 4:
             
-            (self.value_M2, 
-             x_coords_list_teor, 
-             diameters_list_teor) = calculator_M2(self.x_coords_list,
-                                                  self.diameters_list, 
-                                                  (self.wave_length * 10**-9))
-            self.main_curve.setData(x_coords_list_teor, diameters_list_teor)
-            self.M2_line.setText(str(self.value_M2))
+            if not self.wave_length is None:
+                (self.value_M2, 
+                 x_coords_list_teor, 
+                 diameters_list_teor) = calculator_M2(self.x_coords_list,
+                                                      self.diameters_list, 
+                                                      (self.wave_length * 10**-9))
+                self.main_curve.setData(x_coords_list_teor, diameters_list_teor)
+                self.M2_line.setText(str(self.value_M2))
+            else:
+                self.show_info("Длина волны неизвестна, подсчёт M2 невозможен.")
     
     def draw_coords(self, coords=None):
         if coords is None:
@@ -709,7 +712,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def open_record(self):
         user_record = QtWidgets.QFileDialog.getOpenFileName(self, "Choose Results file", '',  
-                                                                 'Results files (*raw_results.csv)')
+                                                                 'Results files (*raw_results.csv);;Any csv files (*.csv)'
+                                                                 )
         if user_record[0]:            
             self.show_info(f'Выбран файл {user_record[0]}')            
             self.process_record(user_record)
@@ -727,8 +731,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_coords_list = list(self.main_df['X_pos'][self.main_df['X_pos'].notna()])
         self.diameters_list = list(self.main_df['Diameter'][self.main_df['Diameter'].notna()])
         self.translator_move_history = [self.raw_df['X_pos'],self.raw_df['Y_pos']]
-        self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
-        
+        try:
+            self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
+            self.wave_length_line.setText(str(self.wave_length))
+        except ValueError:
+            self.wave_length = None
         self.draw_main()
         self.draw_coords('demo')
         
