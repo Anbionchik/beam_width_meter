@@ -734,7 +734,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         try:
             self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
             self.wave_length_line.setText(str(self.wave_length))
-        except ValueError:
+        except (ValueError, AttributeError):
             self.wave_length = None
         self.draw_main()
         self.draw_coords('demo')
