@@ -697,80 +697,6 @@ border:2px solid #d83526;
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QLabel" name="label_3">
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">color:#dedede</string>
-            </property>
-            <property name="text">
-             <string>Путь сохранения</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="results_folder_path">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="choose_folder_btn">
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="choose_open_btn">
-            <property name="minimumSize">
-             <size>
-              <width>100</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>20</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Открыть</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="PlotWidget" name="line_graph" native="true">
@@ -815,11 +741,34 @@ border:2px solid #d83526;
     </property>
     <addaction name="powermeter_action"/>
    </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <addaction name="act_save"/>
+    <addaction name="act_open"/>
+   </widget>
+   <addaction name="menu_2"/>
    <addaction name="menu"/>
   </widget>
   <action name="powermeter_action">
    <property name="text">
     <string>Подключение измерителя</string>
+   </property>
+  </action>
+  <action name="act_save">
+   <property name="text">
+    <string>Сохранять в...</string>
+   </property>
+  </action>
+  <action name="act_saveas">
+   <property name="text">
+    <string>Сохранить как...</string>
+   </property>
+  </action>
+  <action name="act_open">
+   <property name="text">
+    <string>Открыть</string>
    </property>
   </action>
  </widget>

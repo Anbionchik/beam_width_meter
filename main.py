@@ -43,6 +43,7 @@ if platform.system() == "Windows":
     
     if sys.version_info >= (3,8):
         os.add_dll_directory(ximc_package_dir)
+        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
     if not ximc_package_dir in os.environ["Path"]:
         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
 
@@ -104,9 +105,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.steps_along = 1
         self.value_M2 = None
         self.default_sigma = 0.3
-        self.faster_flag = True
-        
-        
+        self.faster_flag = True        
         
         self.threshold_line.setText('0.137')
         self.step_across_beam.setText(str(self.step_across_value))
@@ -120,8 +119,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_across_beam_n.textChanged.connect(self.params_calculator)
         self.step_along_beam_n.textChanged.connect(self.params_calculator)
         
-        
-        
         self.disconnect_powermeter_btn.clicked.connect(self.disconnect_powermeter)
         self.disconnect_translator_btn.clicked.connect(self.disconnect_translator)
         self.reverse_x_btn.clicked.connect(lambda: self.reverse("X"))
@@ -129,16 +126,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.move_x_btn.clicked.connect(lambda: self.move_axis("X"))
         self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
-        self.choose_folder_btn.clicked.connect(self.open_folder)
-        self.choose_open_btn.clicked.connect(self.open_record)
-        self.wave_length_line.editingFinished.connect(self.set_wave_length)
-        
-        
-        
-        icon = self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon)
-        self.choose_folder_btn.setIcon(icon)
+        self.act_save.triggered.connect(self.open_folder)
+        self.act_open.triggered.connect(self.open_record)
+        self.wave_length_line.editingFinished.connect(self.set_wave_length) 
+
         self.folder_name = "../"
-        self.results_folder_path.setText(self.folder_name)
+        self.show_info(f"Установлен путь сохранения: {os.path.abspath(self.folder_name)}")
         self.info_field.setEnabled(True)
         
         # Ручки для оформления графиков
@@ -146,8 +139,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.yellow_pen = pg.mkPen(color=(255,220,51), width=2)
         self.green_pen = pg.mkPen(color=(68,148,74), width=2)
         self.purple_pen = pg.mkPen(color=(222,76,138), width = 2)
-        
-        
         
         self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
@@ -159,10 +150,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                              symbolBrush="#44944A", symbolSize=7)
         self.main_points.sigPointsClicked.connect(self.print_points_clicked)
         self.main_curve = self.main_graph.plot([],[])
-        
-        
-        
-        
+         
         self.translator_coords_graph.setBackground("#293133")
         self.translator_coords_graph.setTitle("Положение подвижки")
         self.translator_coords_graph.setLabel('left', 'Y, мм')
@@ -198,13 +186,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                               symbolSize=8)
         
         #Добавление графиков
-        
-        
-        
-        
-            
         self.power_list = []
-
         self.powermeter_action.triggered.connect(self.open_dialog)
         
         
@@ -254,7 +236,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.tcp_socket.send(out_data)
                 in_data = self.tcp_socket.recv(1024)
                 in_data = bytes.decode(in_data)
-                # in_data = "Фантомный маэстро"
                 self.show_info("Измеритель мощности подключён: " + in_data)
                 wavelength = self.get_wave_length()
                 self.wave_length_line.setText(wavelength)
@@ -329,7 +310,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 answer = bytes.decode(self.tcp_socket.recv(1024))
             average_list.append(float(answer))
             QtCore.QThread.msleep(150)
-            
         
         power_value = mean(average_list)
         
@@ -762,7 +742,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 
                                                                  "Choose folder for results files",
                                                                  options=QtWidgets.QFileDialog.ShowDirsOnly)
-        self.results_folder_path.setText(self.folder_name)
+        self.show_info(f"Путь сохранения: {os.path.abspath(self.folder_name)}")
         
     def closeEvent(self, event):
         if self.disconnect_powermeter_btn.isEnabled():
