@@ -9,11 +9,13 @@ import sys
 import os
 from PyQt5 import QtWidgets, QtCore
 import main_window
+import warn_dialog
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from pyqtgraph import PlotWidget
 import pyqtgraph as pg
 import pandas as pd
+from zipfile import ZipFile
 
 from statistics import mean
 import platform
@@ -126,12 +128,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.move_x_btn.clicked.connect(lambda: self.move_axis("X"))
         self.move_y_btn.clicked.connect(lambda: self.move_axis("Y"))
         self.xy_change_btn.clicked.connect(self.change_axes)
-        self.act_save.triggered.connect(self.open_folder)
+        self.act_save.triggered.connect(self.save_file)
+        # TODO поменятЬ!
         self.act_open.triggered.connect(self.open_record)
         self.wave_length_line.editingFinished.connect(self.set_wave_length) 
 
         self.folder_name = "../"
-        self.show_info(f"Установлен путь сохранения: {os.path.abspath(self.folder_name)}")
+        self.file_name = None
         self.info_field.setEnabled(True)
         
         # Ручки для оформления графиков
@@ -188,6 +191,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         #Добавление графиков
         self.power_list = []
         self.powermeter_action.triggered.connect(self.open_dialog)
+        self.raw_res = None
         
         
     def open_dialog(self):
@@ -524,7 +528,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
-        
+        if not self.raw_res is None:
+            self.save_results()
+            
+        self.raw_res = []        
         self.interrupt_measurment_flag = False
         self.interrupt_btn.setEnabled(True)
         self.begin_measurment_btn.setEnabled(False)
@@ -537,152 +544,124 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.x_coords_list = []
         self.diameter_line.clear()
         self.show_info("Начинаем измерение.")
-        time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
+        self.time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
         point_number = 1
-        with open(self.folder_name + "/" + time_file_name + " raw_results.csv", "w") as file:
+        set_zero(self.device_x, self.device_y)
+                    
+        for j in range(self.steps_along):
+            self.inner_diameters_list = []
+            self.power_list = []
+            #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
+            if self.faster_flag and j > 0:
+                diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
+                diameter_end_point = self.diameter_edge_array[1] // self.step_across_value
+                range_start_value =  diameter_start_point - 25 if diameter_start_point > 25 else 0
+                range_end_value = diameter_end_point + 25 if diameter_end_point + 25 < self.steps_across else self.steps_across
+                across_range = range(int(range_start_value), int(range_end_value))
+            else:
+                across_range = range(self.steps_across)
             
-            file.write("N,Time,X_pos,Y_pos,Value\r")
-            set_zero(self.device_x, self.device_y)
-                        
-            for j in range(self.steps_along):
+            beam_start_point = None
+            beam_end_point = None
+            self.local_coords_list = []
+            
+            for i in across_range:
                 
-                self.inner_diameters_list = []
-                self.power_list = []
-                #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
-                if self.faster_flag and j > 0:
-                    diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
-                    diameter_end_point = self.diameter_edge_array[1] // self.step_across_value
-                    range_start_value =  diameter_start_point - 25 if diameter_start_point > 25 else 0
-                    range_end_value = diameter_end_point + 25 if diameter_end_point + 25 < self.steps_across else self.steps_across
-                    across_range = range(int(range_start_value), int(range_end_value))
-                else:
-                    across_range = range(self.steps_across)
+                if self.interrupt_measurment_flag:
+                    self.show_info("Измерение прервано")
+                    move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
+                    self.begin_measurment_btn.setEnabled(True)
+                    self.interrupt_btn.setEnabled(False)  
+                    return
+                #Преждевременный выход первые три цикла только после 65% точек
+                if not self.faster_flag:                        
+                    if not beam_end_point is None and self.diameter_line.text() != "":
+                        if i - beam_end_point[0] > 20 and j < 3 and i > (self.steps_across * 0.65):
+                            break
                 
-                beam_start_point = None
-                beam_end_point = None
-                self.local_coords_list = []
-                
-                for i in across_range:
-                    
-                    if self.interrupt_measurment_flag:
-                        
-                        self.show_info("Измерение прервано")
-                        move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
-                        self.begin_measurment_btn.setEnabled(True)
-                        self.interrupt_btn.setEnabled(False)
-                        if self.diameters_list:                            
-                            with open(self.folder_name + "/" + time_file_name + " Results.csv", "w") as file:
-                                file.write("N,X_pos,Diameter\r")
-                                for rec in range(len(self.diameters_list)):
-                                    file.write("{},{},{}\r".format(str(rec), 
-                                                                   str(self.x_coords_list[rec]),
-                                                                   str(self.diameters_list[rec])))
-                        
-                        return
-                    #Преждевременный выход первые три цикла только после 65% точек
-                    if not self.faster_flag:                        
-                        if not beam_end_point is None and self.diameter_line.text() != "":
-                            if i - beam_end_point[0] > 20 and j < 3 and i > (self.steps_across * 0.65):
-                                break
-                    
-                    self.update()
-                    QtWidgets.QApplication.processEvents()
-                    # shift_move(self.device_y, self.step_across_value, 
-                    #            self.user_unit)
-                    
-                    coords["x"] = self.step_along_value * j
-                    coords["y"] = self.step_across_value * i
-                    
-                    move_to_coords(self.device_x, self.device_y, 
-                                   (coords["x"],coords["y"]), self.user_unit)
-                    QtCore.QThread.msleep(self.wait_time) 
-                    
-                    power_value = None
-                    while power_value is None:                        
-                        power_value = self.get_point()                    
-                        # power_value = test_val_list[i]
-                        if power_value is None:
-                            self.show_info("Повторный запрос значения мощности")
-                    
-                    self.power_list.append(power_value)
-                    
-                    x_pos, y_pos = map(round, get_position(self.device_x, 
-                                                self.device_y, 
-                                                self.user_unit), [4,4])
-                    
-                    self.local_coords_list.append(y_pos)
-                    
-                    if beam_start_point is None and len(self.power_list) > 6:
-                        if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
-                            mean(self.power_list[-6:-3]) > self.beam_threshold):
-                            
-                            beam_start_point = (i, y_pos)
-                            print(beam_start_point)
-                    
-                    elif not beam_start_point is None and beam_end_point is None:
-                        if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
-                            mean(self.power_list[-6:-3]) < self.beam_threshold 
-                            or (self.steps_across - i < 10)):
-                            
-                            beam_end_point = (i, y_pos)
-                            print(beam_end_point)
-                    
-                    
-                    if self.faster_flag and j > 0:
-                        if i > int(range_start_value) + 1:
-                            self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
-                    elif i > 3:
-                        self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
-                        
-                    self.draw_power(beam_start_point, beam_end_point, self.faster_flag)
-                    self.draw_coords((x_pos, y_pos))
-                    time_now = time.strftime("%M:%S", time.localtime())
-                    line = (str(point_number) + "," + time_now + "," + 
-                            str(x_pos) + "," + str(y_pos) + 
-                            "," + str(power_value)).replace("\r\n", "")
-                    shw_line = "{:^4}|{:^8}|{:^8.4f}|{:^8.4f}|{:^8.4f}".format(point_number, 
-                                                                                  time_now, x_pos, 
-                                                                                  y_pos,float(power_value))
-                    print(repr(line))
-                    file.write(line + '\r')
-                    self.show_info(shw_line)
-                    point_number += 1
-                
-                if self.diameter_line.text() != "":                    
-                    if self.inner_diameters_list:
-                        self.diameters_list.append(float(self.inner_diameters_list[-1]))
-                    else:
-                        self.diameters_list.append(float(self.diameter_line.text()))
-                    self.x_coords_list.append(x_pos)
-                    self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
-                
-                self.diameter_line.clear()
-                self.draw_main()
+                self.update()
+                QtWidgets.QApplication.processEvents()
+                coords["x"] = self.step_along_value * j
+                coords["y"] = self.step_across_value * i
                 
                 move_to_coords(self.device_x, self.device_y, 
-                               ((self.step_along_value) * (j + 1),0), 
-                               self.user_unit)
-                if j < self.steps_along -1:
-                    QtCore.QThread.msleep(10000) 
+                               (coords["x"],coords["y"]), self.user_unit)
+                QtCore.QThread.msleep(self.wait_time) 
+                
+                power_value = None
+                while power_value is None:                        
+                    power_value = self.get_point()                    
+                    if power_value is None:
+                        self.show_info("Повторный запрос значения мощности")
+                
+                self.power_list.append(power_value)
+                
+                x_pos, y_pos = map(round, get_position(self.device_x, 
+                                            self.device_y, 
+                                            self.user_unit), [4,4])
+                
+                self.local_coords_list.append(y_pos)
+                
+                if beam_start_point is None and len(self.power_list) > 6:
+                    if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
+                        mean(self.power_list[-6:-3]) > self.beam_threshold):
+                        
+                        beam_start_point = (i, y_pos)
+                        print(beam_start_point)
+                
+                elif not beam_start_point is None and beam_end_point is None:
+                    if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
+                        mean(self.power_list[-6:-3]) < self.beam_threshold 
+                        or (self.steps_across - i < 10)):
+                        
+                        beam_end_point = (i, y_pos)
+                        print(beam_end_point)
+                
+                
+                if self.faster_flag and j > 0:
+                    if i > int(range_start_value) + 1:
+                        self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
+                elif i > 3:
+                    self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
+                    
+                self.draw_power(beam_start_point, beam_end_point, self.faster_flag)
+                self.draw_coords((x_pos, y_pos))
+                time_now = time.strftime("%M:%S", time.localtime())
+                line = (str(point_number) + "," + time_now + "," + 
+                        str(x_pos) + "," + str(y_pos) + 
+                        "," + str(power_value)).replace("\r\n", "")
+                shw_line = "{:^4}|{:^8}|{:^8.4f}|{:^8.4f}|{:^8.4f}".format(point_number, 
+                                                                              time_now, x_pos, 
+                                                                              y_pos,float(power_value))
+                print(repr(line))
+                self.raw_res.append(line + '\r')
+                self.show_info(shw_line)
+                point_number += 1
+            
+            if self.diameter_line.text() != "":                    
+                if self.inner_diameters_list:
+                    self.diameters_list.append(float(self.inner_diameters_list[-1]))
+                else:
+                    self.diameters_list.append(float(self.diameter_line.text()))
+                self.x_coords_list.append(x_pos)
+                self.show_info("В точке {:.2f} диаметр пучка составляет {:.4f}".format(x_pos, float(self.diameter_line.text())))
+            
+            self.diameter_line.clear()
+            self.draw_main()
+            
+            move_to_coords(self.device_x, self.device_y, 
+                           ((self.step_along_value) * (j + 1),0), 
+                           self.user_unit)
+            if j < self.steps_along -1:
+                QtCore.QThread.msleep(10000) 
         
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
-        with open(self.folder_name + "/" + time_file_name + " Results.csv", "w") as file:
-            file.write("N,X_pos,Diameter\r")
-            for rec in range(len(self.diameters_list)):
-                file.write("{},{},{}\r".format(str(rec), 
-                                               str(self.x_coords_list[rec]),
-                                               str(self.diameters_list[rec])))
-            if not self.value_M2 is None:
-                file.write(f"M_square = {self.value_M2}\r")
-            file.write(f'Wave_length = {self.wave_length}\r')
         self.begin_measurment_btn.setEnabled(True)
         self.interrupt_btn.setEnabled(False)
         self.show_info("Измерение завершено.")
                 
-            
-    
-        
+       
     def interrupt_measurment(self):
         self.interrupt_btn.setEnabled(False)
         self.interrupt_measurment_flag = True
@@ -691,6 +670,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.info_field.appendPlainText(message)
     
     def open_record(self):
+        # TODO переделать
         user_record = QtWidgets.QFileDialog.getOpenFileName(self, "Choose Results file", '',  
                                                                  'Results files (*raw_results.csv);;Any csv files (*.csv)'
                                                                  )
@@ -737,12 +717,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.show_info(str(points[0].pos()))        
         
     
-    def open_folder(self):
+    def save_file(self):
+        dialog = QtWidgets.QFileDialog(self)
+        dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        dialog.setNameFilter("zip-files (*.zip)")
+        dialog.setViewMode(QtWidgets.QFileDialog.Detail)
+        if dialog.exec_():
+            self.file_name = dialog.selectedFiles()[0]
+            self.show_info(f"Файл сохранён: {self.file_name}")
+            return True
+        else:
+            self.file_name = None
         
-        self.folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 
-                                                                 "Choose folder for results files",
-                                                                 options=QtWidgets.QFileDialog.ShowDirsOnly)
-        self.show_info(f"Путь сохранения: {os.path.abspath(self.folder_name)}")
         
     def closeEvent(self, event):
         if self.disconnect_powermeter_btn.isEnabled():
@@ -750,8 +736,63 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         if self.disconnect_translator_btn.isEnabled():
             self.disconnect_translator()
         event.accept() # let the window close
+    
+    def test_func(self):
+        pass
+        
+    
+    def save_results(self):        
+        
+        raw_res_file = open(self.folder_name + "/" + time_file_name + " raw_results.csv", "w")
+        raw_res_file.write("N,Time,X_pos,Y_pos,Value\r")
+        
+        main_res_file = open(self.folder_name + "/" + time_file_name + " results.csv", "w")
+        main_res_file.write("N,X_pos,Diameter\r")
+        
+        for rec in self.raw_res:
+            raw_res_file.write(rec)
+        
+        for rec in range(len(self.diameters_list)):
+            main_res_file.write("{},{},{}\r".format(str(rec), 
+                                           str(self.x_coords_list[rec]),
+                                           str(self.diameters_list[rec])))
+        main_res_file.write(f"M_square = {self.value_M2}\r")
+        main_res_file.write(f'Wave_length = {self.wave_length}\r')
+        
+        result_code = 0
+        while self.file_name is None and result_code == 0:
+            if self.save_file():
+                break
+            dlg = WarnDialog(warn_message="Результаты не будет сохранены, продолжить?")
+            result_code = dlg.exec_()
+        if self.file_name is None:
+            raw_res_file.close()
+            os.remove(raw_res_file.name)
+            main_res_file.close()
+            os.remove(main_res_file.name)
+            return
+        else:
+            # create a ZipFile object
+            if not self.file_name.endswith('.zip'):
+                self.file_name += '.zip'
+            zipObj = ZipFile(self.file_name, "w")
+            # Add multiple files to the zip
+            zipObj.write(raw_res_file)
+            zipObj.write(main_res_file)
+            raw_res_file.close()
+            os.remove(raw_res_file.name)
+            main_res_file.close()
+            os.remove(main_res_file.name)
+            # close the Zip File
+            zipObj.close()
+            self.file_name = None
+        
 
-
+class WarnDialog(QtWidgets.QDialog, warn_dialog.Ui_Dialog):
+    def __init__(self, warn_message):
+        super().__init__()
+        self.setupUi(self)
+        self.label.setText(warn_message)
 
 class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
     def __init__(self, ip, port, baud_rate):
