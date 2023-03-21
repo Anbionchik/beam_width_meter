@@ -107,7 +107,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.steps_along = 1
         self.value_M2 = None
         self.default_sigma = 0.3
-        self.faster_flag = True        
+        self.faster_flag = True  
+        self.results_saved = True
         
         self.threshold_line.setText('0.137')
         self.step_across_beam.setText(str(self.step_across_value))
@@ -528,9 +529,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     
     def execute_measurment(self):
-        if not self.raw_res is None:
+        if not self.results_saved:
             self.save_results()
-            
+        
+        self.results_saved = False    
         self.raw_res = []        
         self.interrupt_measurment_flag = False
         self.interrupt_btn.setEnabled(True)
@@ -543,6 +545,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.diameters_list = []
         self.x_coords_list = []
         self.diameter_line.clear()
+        self.diameter_edge_array = None
         self.show_info("Начинаем измерение.")
         self.time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
@@ -553,7 +556,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.inner_diameters_list = []
             self.power_list = []
             #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
-            if self.faster_flag and j > 0:
+            if self.faster_flag and j > 0 and self.diameter_edge_array is not None:
                 diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
                 diameter_end_point = self.diameter_edge_array[1] // self.step_across_value
                 range_start_value =  diameter_start_point - 25 if diameter_start_point > 25 else 0
@@ -619,7 +622,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         print(beam_end_point)
                 
                 
-                if self.faster_flag and j > 0:
+                if self.faster_flag and j > 0 and self.diameter_edge_array is not None:
                     if i > int(range_start_value) + 1:
                         self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
                 elif i > 3:
@@ -672,7 +675,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def open_record(self):
         # TODO переделать
         user_record = QtWidgets.QFileDialog.getOpenFileName(self, "Choose Results file", '',  
-                                                                 'Results files (*raw_results.csv);;Any csv files (*.csv)'
+                                                                 'Results files (*.zip);;Any zip files (*.zip)'
                                                                  )
         if user_record[0]:            
             self.show_info(f'Выбран файл {user_record[0]}')            
@@ -735,6 +738,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.disconnect_powermeter()
         if self.disconnect_translator_btn.isEnabled():
             self.disconnect_translator()
+        if not self.results_saved:
+            self.save_results()
         event.accept() # let the window close
     
     def test_func(self):
@@ -743,10 +748,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def save_results(self):        
         
-        raw_res_file = open(self.folder_name + "/" + time_file_name + " raw_results.csv", "w")
+        raw_res_file = open(self.folder_name + "/" + self.time_file_name + " raw_results.csv", "w")
         raw_res_file.write("N,Time,X_pos,Y_pos,Value\r")
         
-        main_res_file = open(self.folder_name + "/" + time_file_name + " results.csv", "w")
+        main_res_file = open(self.folder_name + "/" + self.time_file_name + " results.csv", "w")
         main_res_file.write("N,X_pos,Diameter\r")
         
         for rec in self.raw_res:
@@ -770,6 +775,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             os.remove(raw_res_file.name)
             main_res_file.close()
             os.remove(main_res_file.name)
+            self.results_saved = True
             return
         else:
             # create a ZipFile object
@@ -777,15 +783,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.file_name += '.zip'
             zipObj = ZipFile(self.file_name, "w")
             # Add multiple files to the zip
-            zipObj.write(raw_res_file)
-            zipObj.write(main_res_file)
             raw_res_file.close()
-            os.remove(raw_res_file.name)
             main_res_file.close()
+            zipObj.write(raw_res_file.name, arcname=os.path.basename(raw_res_file.name))
+            zipObj.write(main_res_file.name,arcname=os.path.basename(main_res_file.name))
+            os.remove(raw_res_file.name)
             os.remove(main_res_file.name)
             # close the Zip File
             zipObj.close()
             self.file_name = None
+            self.results_saved = True
         
 
 class WarnDialog(QtWidgets.QDialog, warn_dialog.Ui_Dialog):
