@@ -539,9 +539,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.begin_measurment_btn.setEnabled(False)
         self.params_setter()
         self.main_points.setData(symbolBrush="#44944A")
-        self.main_points.setData([],[])
-        self.main_curve.setData([],[])
-        self.translator_move_history = [[],[]]
+        self.clear_graphs()
         self.diameters_list = []
         self.x_coords_list = []
         self.diameter_line.clear()
@@ -682,15 +680,35 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.process_record(user_record)
         else:
             self.show_info("Файл не выбран")
+    
+    def clear_graphs(self):
+        self.main_points.setData([],[])
+        self.main_curve.setData([],[])
+        self.power_line.setData([],[])
+        self.intersection_points.setData([],[])
+        self.gauss_curve.setData([],[])
+        self.gauss_points.setData([],[])
+        self.translator_move_history = [[],[]]
             
     def process_record(self, user_record):
         self.main_points.setData(symbolBrush="#44944A")
-        try:
-            self.main_df = pd.read_csv(user_record[0].replace("raw_results", "Results"))
-        except FileNotFoundError:
-            self.show_info(f'Файла {user_record[0].replace("raw_results", "Results")} не существует')
+        self.clear_graphs()
+        self.diameters_list = []
+        self.x_coords_list = []
+        self.diameter_line.clear()
+        self.diameter_edge_array = None
+        
+        zipObj = ZipFile(user_record[0], 'r')
+        self.raw_df, self.main_df = None, None
+        for file in zipObj.namelist():
+            if 'raw_results' in file.lower():
+                self.raw_df = pd.read_csv(zipObj.open(file))
+            elif 'results' in file.lower():
+                self.main_df = pd.read_csv(zipObj.open(file))
+        if self.main_df is None or self.raw_df is None:
+            self.show_info(f'Архив {user_record[0]} не содержит файлов результатов')
             return
-        self.raw_df = pd.read_csv(user_record[0])
+        
         self.x_coords_list = list(self.main_df['X_pos'][self.main_df['X_pos'].notna()])
         self.diameters_list = list(self.main_df['Diameter'][self.main_df['Diameter'].notna()])
         self.translator_move_history = [self.raw_df['X_pos'],self.raw_df['Y_pos']]
