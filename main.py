@@ -561,6 +561,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 range_end_value = diameter_end_point + 25 if diameter_end_point + 25 < self.steps_across else self.steps_across
                 across_range = range(int(range_start_value), int(range_end_value))
             else:
+                range_start_value = None
                 across_range = range(self.steps_across)
             
             beam_start_point = None
@@ -620,7 +621,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         print(beam_end_point)
                 
                 
-                if self.faster_flag and j > 0 and self.diameter_edge_array is not None:
+                if self.faster_flag and j > 0 and range_start_value is not None:
                     if i > int(range_start_value) + 1:
                         self.draw_gauss(beam_start_point, beam_end_point, self.faster_flag)
                 elif i > 3:
@@ -671,7 +672,6 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.info_field.appendPlainText(message)
     
     def open_record(self):
-        # TODO переделать
         user_record = QtWidgets.QFileDialog.getOpenFileName(self, "Choose Results file", '',  
                                                                  'Results files (*.zip);;Any zip files (*.zip)'
                                                                  )
@@ -745,7 +745,11 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         dialog.setViewMode(QtWidgets.QFileDialog.Detail)
         if dialog.exec_():
             self.file_name = dialog.selectedFiles()[0]
-            self.show_info(f"Файл сохранён: {self.file_name}")
+            if not self.results_saved:
+                self.show_info(f"Файл для сохранения: {self.file_name}")
+                self.save_results()
+            else:
+                self.show_info(f"Результаты будут сохранены в: {self.file_name}")
             return True
         else:
             self.file_name = None
@@ -786,7 +790,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         while self.file_name is None and result_code == 0:
             if self.save_file():
                 break
-            dlg = WarnDialog(warn_message="Результаты не будет сохранены, продолжить?")
+            dlg = WarnDialog(warn_message="Результаты не будут сохранены, продолжить?")
             result_code = dlg.exec_()
         if self.file_name is None:
             raw_res_file.close()
@@ -809,6 +813,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             os.remove(main_res_file.name)
             # close the Zip File
             zipObj.close()
+            self.show_info(f"Результаты сохранены в: {self.file_name}")
             self.file_name = None
             self.results_saved = True
         
