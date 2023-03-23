@@ -62,7 +62,7 @@ from translator_controller import (initialize_axes,
                                    reverse_engine,                                   
                                    set_zero,
                                    test_run,
-                                   get_position,
+                                   get_coords,
                                    move_to_coords,
                                    shift_move)
 from pyximc_wrapper.pyximc import *
@@ -329,10 +329,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         try:
             if axis == "X":
                 shift_val = float(self.shift_x_line.text())
-                shift_move(self.device_x, shift_val, self.user_unit)
+                if not shift_move(self.device_x, shift_val, self.user_unit):
+                    dlg = WarnDialog(warn_message="""ОШИБКА! Заданы координаты перемещения,
+                                     выходящие за границы разрешённых, перемещение не будет выполнено.""")
+                    dlg.exec_()
             elif axis == "Y":
                 shift_val = float(self.shift_y_line.text())
-                shift_move(self.device_y, shift_val, self.user_unit)
+                if not shift_move(self.device_y, shift_val, self.user_unit):
+                    dlg = WarnDialog(warn_message="""ОШИБКА! Заданы координаты перемещения,
+                                     выходящие за границы разрешённых, перемещение не будет выполнено.""")
+                    dlg.exec_()
         except ValueError:
             pass
     
@@ -445,7 +451,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def draw_coords(self, coords=None):
         if coords is None:
-            x_pos, y_pos = map(round, get_position(self.device_x, 
+            x_pos, y_pos = map(round, get_coords(self.device_x, 
                                         self.device_y, 
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
@@ -599,7 +605,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 
                 self.power_list.append(power_value)
                 
-                x_pos, y_pos = map(round, get_position(self.device_x, 
+                x_pos, y_pos = map(round, get_coords(self.device_x, 
                                             self.device_y, 
                                             self.user_unit), [4,4])
                 
