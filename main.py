@@ -89,7 +89,45 @@ commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR
 
 
 
+class Powermeter():
+    #TODO Дописать тут новый класс, где будут все измерители, в т.ч. сделать фантом
+    def __init__(self):
+        pass
+    
+    def get_point(self):
+        
+        """
+        Делается запрос 5 точек от измерителя с паузой в 150 мс, затем 
+        высчитывается станадартное отклонение и среднее. Если 
+        ст.откл/среднее > threshold_value. То возвращается None, в противном 
+        случае среднее.
 
+        Returns
+        -------
+        power_value : float.
+
+        """
+        threshold_value = 0.5     
+        
+        average_list = []
+        
+        for _ in range(5):
+            if connection_type == 'USB':
+                answer = self.my_instrument.query(commands_dict[self.device][1])
+            else:
+                self.tcp_socket.send(str.encode("*CVU"))
+                answer = bytes.decode(self.tcp_socket.recv(1024))
+            average_list.append(float(answer))
+            QtCore.QThread.msleep(150)
+        
+        power_value = mean(average_list)
+        
+        st_otkl = stdev(average_list)
+        
+        if st_otkl / power_value > threshold_value:
+            return None
+        else:
+            return power_value
 
 class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self):
@@ -290,40 +328,40 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info(f"Не удалось установить длину волны {wavelength} нм. Возврат к значению {recieved_wavelength}.")
             self.wave_length_line.setText(recieved_wavelength)
     
-    def get_point(self):
+    # def get_point(self):
         
-        """
-        Делается запрос 5 точек от измерителя с паузой в 150 мс, затем 
-        высчитывается станадартное отклонение и среднее. Если 
-        ст.откл/среднее > threshold_value. То возвращается None, в противном 
-        случае среднее.
+    #     """
+    #     Делается запрос 5 точек от измерителя с паузой в 150 мс, затем 
+    #     высчитывается станадартное отклонение и среднее. Если 
+    #     ст.откл/среднее > threshold_value. То возвращается None, в противном 
+    #     случае среднее.
 
-        Returns
-        -------
-        power_value : float.
+    #     Returns
+    #     -------
+    #     power_value : float.
 
-        """
-        threshold_value = 0.5        
+    #     """
+    #     threshold_value = 0.5        
         
-        average_list = []
+    #     average_list = []
         
-        for _ in range(5):
-            if connection_type == 'USB':
-                answer = self.my_instrument.query(commands_dict[self.device][1])
-            else:
-                self.tcp_socket.send(str.encode("*CVU"))
-                answer = bytes.decode(self.tcp_socket.recv(1024))
-            average_list.append(float(answer))
-            QtCore.QThread.msleep(150)
+    #     for _ in range(5):
+    #         if connection_type == 'USB':
+    #             answer = self.my_instrument.query(commands_dict[self.device][1])
+    #         else:
+    #             self.tcp_socket.send(str.encode("*CVU"))
+    #             answer = bytes.decode(self.tcp_socket.recv(1024))
+    #         average_list.append(float(answer))
+    #         QtCore.QThread.msleep(150)
         
-        power_value = mean(average_list)
+    #     power_value = mean(average_list)
         
-        st_otkl = stdev(average_list)
+    #     st_otkl = stdev(average_list)
         
-        if st_otkl / power_value > threshold_value:
-            return None
-        else:
-            return power_value
+    #     if st_otkl / power_value > threshold_value:
+    #         return None
+    #     else:
+    #         return power_value
     
     def move_axis(self, axis):
         try:
