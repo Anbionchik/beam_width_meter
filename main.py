@@ -331,14 +331,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             if axis == "X":
                 shift_val = float(self.shift_x_line.text())
                 if not shift_move(self.device_x, shift_val, self.user_unit):
-                    dlg = WarnDialog(warn_message="""ОШИБКА! Заданы координаты перемещения,
-                                     выходящие за границы разрешённых, перемещение не будет выполнено.""")
+                    dlg = WarnDialog(warn_message=("ОШИБКА! Заданы координаты перемещения,\n"
+                                     "выходящие за границы разрешённых,"
+                                     " перемещение не будет выполнено."))
                     dlg.exec_()
             elif axis == "Y":
                 shift_val = float(self.shift_y_line.text())
                 if not shift_move(self.device_y, shift_val, self.user_unit):
-                    dlg = WarnDialog(warn_message="""ОШИБКА! Заданы координаты перемещения,
-                                     выходящие за границы разрешённых, перемещение не будет выполнено.""")
+                    dlg = WarnDialog(warn_message=("ОШИБКА! Заданы координаты перемещения,\n"
+                                     "выходящие за границы разрешённых,"
+                                     " перемещение не будет выполнено."))
                     dlg.exec_()
         except ValueError:
             pass
