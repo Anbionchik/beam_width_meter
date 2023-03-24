@@ -74,8 +74,7 @@ from statistics import stdev
 pg.setConfigOptions(antialias=True)
 # Static
 powermeter_ip_address = "172.16.16.84"
-# Dynamic
-# powermeter_ip_address = "172.16.16.84"
+
 powermeter_port = 5000
 
 powermeter_baud_rate = 115200
