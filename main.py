@@ -477,9 +477,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             else:
                 sigma = end_point[1] - start_point[1]
             
-            gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
+            gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
         else:
-            gauss_fit, y = get_gauss_fit(self.local_coords_list, self.power_list)
+            gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list)
         
         if not faster_flag and not start_point is None and start_point[0] > 7:
             crds_list = self.local_coords_list[start_point[0] - 7:]
@@ -498,15 +498,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.gauss_curve.setData(crds_list, gauss_list)
             self.gauss_points.setData(crds_list[:-1], y_list[:-1])
         if not end_point is None:
-            self.find_diameter(self.local_coords_list, gauss_fit)
+            self.find_diameter(self.local_coords_list, gauss_fit, popt)
         
-    def find_diameter(self, x, gauss_fit):
+    def find_diameter(self, x, gauss_fit, popt):
         threshold = float(self.threshold_line.text())
-        if not gauss_fit is None: 
-            gauss_max = gauss_fit.max()
-            threshold_curve = np.full(len(x), gauss_max * threshold)
-            
-            intersection_list = find_intersection(x, gauss_fit, threshold_curve)        
+        if not gauss_fit is None:
+            intersection_list = find_intersection(x, popt, threshold)        
             if not intersection_list is None:            
                 self.intersection_points.setData(*intersection_list)
                 if len(intersection_list[0]) == 2:

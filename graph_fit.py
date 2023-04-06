@@ -36,12 +36,17 @@ def get_gauss_fit(x, y, sigma=1):
     
     gauss_fit = gauss_func(x, popt[0], popt[1], popt[2])
     
-    return gauss_fit, y
+    return gauss_fit, y, popt
 
-def find_intersection(x, y1, y2):
+def find_intersection(x, popt, threshold):
+    linspace_x = np.linspace(x[0], x[-1], 500)
+    gauss_fit = gauss_func(linspace_x, popt[0], popt[1], popt[2])
     
-    line1 = LineString(np.column_stack((x, y1)))
-    line2 = LineString(np.column_stack((x, y2)))
+    gauss_max = gauss_fit.max()
+    threshold_curve = np.full(len(linspace_x), gauss_max * threshold)
+    
+    line1 = LineString(np.column_stack((linspace_x, gauss_fit)))
+    line2 = LineString(np.column_stack((linspace_x, threshold_curve)))
 
     intersection = line1.intersection(line2)
 
