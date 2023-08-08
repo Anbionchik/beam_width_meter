@@ -115,10 +115,13 @@ def set_zero(device_id_x, device_id_y):
     lib.command_zero(device_id_y)
     
 def shift_move(device_id, shift, calibration):
+    if not check_edges(device_id, calibration, shift):
+        return False
     global translator_move_history
     shift = int(shift / calibration.A)
     lib.command_movr(device_id, c_int(shift))
     lib.command_wait_for_stop(device_id, 100)
+    return True
 
 def reverse_engine(device_id):
     eng = engine_settings_t()
@@ -145,13 +148,34 @@ def test_run(device_id, calibration):
     lib.command_movr_calb(device_id, c_float(-2), byref(calibration))
     lib.command_wait_for_stop(device_id, 100)
     
-def get_position(device_id_x, device_id_y, user_unit):
+def get_coords(device_id_x, device_id_y, user_unit):
     x_pos = get_position_calb_t()
     y_pos = get_position_calb_t()
     lib.get_position_calb(device_id_x, byref(x_pos), user_unit)
     lib.get_position_calb(device_id_y, byref(y_pos), user_unit)
     
     return (x_pos.Position, y_pos.Position)
+
+def check_edges(device_id, user_unit, shift):
+    pos = get_position(device_id, user_unit)
+    edges = get_edges(device_id, user_unit)
+    print(pos, edges[0], edges[1])
+    if pos + shift <= edges[0] or pos + shift >= edges[1]:
+        return False
+    else:
+        return True
+    
+def get_edges(device_id, user_unit):
+    "Returns list with calibrated coords of left border and right border"
+    edges = edges_settings_calb_t()
+    lib.get_edges_settings_calb(device_id, byref(edges), user_unit)
+    return [edges.LeftBorder, edges.RightBorder]
+
+def get_position(device_id, user_unit):
+    "Returns calibrated position"
+    pos = get_position_calb_t()
+    lib.get_position_calb(device_id, byref(pos), user_unit)
+    return pos.Position
 
 def move_to_coords(device_id_x, device_id_y, coords, user_unit):
     lib.command_move_calb(device_id_x, c_float(float(coords[0])), byref(user_unit))

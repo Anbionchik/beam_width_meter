@@ -62,9 +62,10 @@ from translator_controller import (initialize_axes,
                                    reverse_engine,                                   
                                    set_zero,
                                    test_run,
-                                   get_position,
+                                   get_coords,
                                    move_to_coords,
-                                   shift_move)
+                                   shift_move,
+                                   check_edges)
 from pyximc_wrapper.pyximc import *
 from graph_fit import get_gauss_fit, find_intersection, calculator_M2
 import numpy as np
@@ -117,10 +118,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_beam_n.setText(str(self.steps_along))
         self.params_calculator()
         
-        self.step_across_beam.textChanged.connect(self.params_calculator)
-        self.step_along_beam.textChanged.connect(self.params_calculator)
-        self.step_across_beam_n.textChanged.connect(self.params_calculator)
-        self.step_along_beam_n.textChanged.connect(self.params_calculator)
+        self.step_across_beam.editingFinished.connect(self.allow_to_measure)
+        self.step_along_beam.editingFinished.connect(self.allow_to_measure)
+        self.step_across_beam_n.editingFinished.connect(self.allow_to_measure)
+        self.step_along_beam_n.editingFinished.connect(self.allow_to_measure)
         
         self.disconnect_powermeter_btn.clicked.connect(self.disconnect_powermeter)
         self.disconnect_translator_btn.clicked.connect(self.disconnect_translator)
@@ -329,10 +330,18 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         try:
             if axis == "X":
                 shift_val = float(self.shift_x_line.text())
-                shift_move(self.device_x, shift_val, self.user_unit)
+                if not shift_move(self.device_x, shift_val, self.user_unit):
+                    dlg = WarnDialog(warn_message=("ОШИБКА! Заданы координаты перемещения,\n"
+                                     "выходящие за границы разрешённых,"
+                                     " перемещение не будет выполнено."))
+                    dlg.exec_()
             elif axis == "Y":
                 shift_val = float(self.shift_y_line.text())
-                shift_move(self.device_y, shift_val, self.user_unit)
+                if not shift_move(self.device_y, shift_val, self.user_unit):
+                    dlg = WarnDialog(warn_message=("ОШИБКА! Заданы координаты перемещения,\n"
+                                     "выходящие за границы разрешённых,"
+                                     " перемещение не будет выполнено."))
+                    dlg.exec_()
         except ValueError:
             pass
     
@@ -358,7 +367,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def allow_to_measure(self):
         if (not self.connect_powermeter_btn.isEnabled() and
             not self.connect_translator_btn.isEnabled()):
-            self.begin_measurment_btn.setEnabled(True)
+            if self.params_calculator():
+                self.begin_measurment_btn.setEnabled(True)
+            else:
+                self.begin_measurment_btn.setEnabled(False)
         else:
             self.begin_measurment_btn.setEnabled(False)
             
@@ -393,15 +405,32 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.steps_along = int(self.step_along_beam_n.text())
         
     def params_calculator(self):
+        raise_error = False
         try:
             lab_across = round(int(self.step_across_beam_n.text()) * 
                                float(self.step_across_beam.text()), 2)
             lab_along = round(int(self.step_along_beam_n.text()) * 
-                              float(self.step_along_beam.text()) , 2)
+                              float(self.step_along_beam.text()) , 2)            
+            
             self.label_n_across.setText("Всего {} мм".format(lab_across))
             self.label_n_along.setText("Всего {} мм".format(lab_along))
-        except ValueError:
-            pass
+            
+            if not check_edges(self.device_x, self.user_unit, lab_along):
+                self.label_n_along.setStyleSheet("color: red;")
+                raise_error = True
+            else:
+                self.label_n_along.setStyleSheet("color: #dedede")
+            if not check_edges(self.device_y, self.user_unit, lab_across):
+                self.label_n_across.setStyleSheet("color: red;")
+                raise_error = True
+            else:
+                self.label_n_across.setStyleSheet("color: #dedede")
+            
+            if raise_error:
+                raise ValueError
+            return True
+        except (ValueError, AttributeError):
+            return False
         
     
     def reverse(self, axis):
@@ -445,7 +474,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def draw_coords(self, coords=None):
         if coords is None:
-            x_pos, y_pos = map(round, get_position(self.device_x, 
+            x_pos, y_pos = map(round, get_coords(self.device_x, 
                                         self.device_y, 
                                         self.user_unit), [4,4])
             self.translator_move_history[0].append(x_pos)
@@ -596,7 +625,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 
                 self.power_list.append(power_value)
                 
-                x_pos, y_pos = map(round, get_position(self.device_x, 
+                x_pos, y_pos = map(round, get_coords(self.device_x, 
                                             self.device_y, 
                                             self.user_unit), [4,4])
                 
