@@ -22,10 +22,12 @@ import platform
 import powermeter_dialog
 
 without_USB = False
+connection_type = 'USB'
 try:
     import pyvisa
 except ModuleNotFoundError:
     without_USB = True
+    connection_type = 'Ethernet'
     
 
 # Dependences
@@ -83,10 +85,11 @@ powermeter_baud_rate = 115200
 
 powermeter_com_port = ''
 
-connection_type = 'Ethernet'
+AUTO_CONNECTION = True
 
-commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR:WAV'), 
-                 'maestro':('*VER?', '*CVU', '*GWL', '*PWC')}
+commands_dict = {'maestro':('*VER?', '*CVU', '*GWL', '*PWC'),
+                 'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR:WAV') 
+                 }
 
 
 
@@ -210,26 +213,51 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.device = ''
             rm = pyvisa.ResourceManager()
             rm.list_resources()
-            self.my_instrument = rm.open_resource(powermeter_com_port)
-            self.my_instrument.baud_rate = powermeter_baud_rate
-            
-            for k, j in commands_dict.items():
-                try:
-                    in_data = self.my_instrument.query(j[0]).strip('\n')
-                    if in_data == "Command not found\r":
-                        continue
-                except Exception as e:
-                    self.show_info(str(e))
-                else:
-                    self.device = k
-                    break
+            if AUTO_CONNECTION:
+                if not rm.list_resources():
+                    self.show_info('Подключённых устройств не обнаружено')
+                    return
+                for device in rm.list_resources():
+                    if self.device:
+                        break
+                    _ = rm.open_resource(device)
+                    _.baud_rate = powermeter_baud_rate
+                    for k, j in commands_dict.items():
+                        try:
+                            in_data = _.query(j[0]).strip('\n')
+                            if in_data == "Command not found\r":
+                                continue
+                        except Exception as e:
+                            continue
+                        else:
+                            self.device = k
+                            self.my_instrument = _
+                            break                    
+            else:
+                self.my_instrument = rm.open_resource(powermeter_com_port)
+                self.my_instrument.baud_rate = powermeter_baud_rate
+                
+                for k, j in commands_dict.items():
+                    try:
+                        in_data = self.my_instrument.query(j[0]).strip('\n')
+                        if in_data == "Command not found\r":
+                            continue
+                    except Exception as e:
+                        self.show_info(str(e))
+                    else:
+                        self.device = k
+                        break
             if self.device:
                 self.show_info("Измеритель мощности подключён: " + in_data)
                 wavelength = self.get_wave_length()
                 self.wave_length_line.setText(wavelength)
                 self.wave_length = int(wavelength)
             else:
-                self.show_info("Ошибка запроса на подключённое устройство")
+                if AUTO_CONNECTION:
+                    self.show_info("Подключение в автоматическом режиме не удалось")
+                    self.show_info("попробуйте подключение в ручном режиме")
+                else:
+                    self.show_info("Ошибка запроса на подключённое устройство")
                 return
         
         else:
@@ -858,11 +886,10 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
         self.port_line.setText(str(port))
         self.baud_rate_line.setText(str(baud_rate))
         if without_USB:
-            self.radioButton_2.setEnabled(False)
-        self.com_port_box.setEnabled(False)
-        self.rescan_btn.setEnabled(False)
-        self.baud_rate_line.setEnabled(False)
-        
+            self.radioButton_2.setEnabled(False) 
+        self.local_auto_status = False            
+        self.change_connection_type()
+        self.checkBox.clicked.connect(self.set_auto_connection)           
         self.radioButton.clicked.connect(self.change_connection_type)
         self.radioButton_2.clicked.connect(self.change_connection_type)
         self.rescan_btn.clicked.connect(self.rescan_com_ports)
@@ -871,24 +898,36 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
         
                 
         
-    def change_connection_type(self):
-        sender = self.sender()
-        if sender.text() == "Ethernet":
+    def change_connection_type(self, initial=False):
+        if self.sender().text() in ['Ethernet', 'USB']:
+            type_to_set = self.sender().text()
+        else:
+            type_to_set = connection_type
+        if type_to_set == 'Ethernet':
+            if not self.radioButton.isChecked():
+                self.radioButton.setChecked(True)
             if not self.ip_line.isEnabled():
                 self.ip_line.setEnabled(True)
                 self.port_line.setEnabled(True)
-            if self.com_port_box.isEnabled():
+            if self.checkBox.isEnabled():
                 self.com_port_box.setEnabled(False)
                 self.rescan_btn.setEnabled(False)
                 self.baud_rate_line.setEnabled(False)
+                self.checkBox.setEnabled(False)
         else:
+            if not self.radioButton_2.isChecked():
+                self.radioButton_2.setChecked(True)
             if self.ip_line.isEnabled():
                 self.ip_line.setEnabled(False)
                 self.port_line.setEnabled(False)
-            if not self.com_port_box.isEnabled():
+            if not self.checkBox.isEnabled():
                 self.com_port_box.setEnabled(True)
                 self.rescan_btn.setEnabled(True)
                 self.baud_rate_line.setEnabled(True)
+                self.checkBox.setEnabled(True)
+            if AUTO_CONNECTION:
+                self.checkBox.setChecked(True)
+                self.set_auto_connection()
                 
     def rescan_com_ports(self):
         self.com_port_box.clear()
@@ -910,15 +949,37 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
                 powermeter_port = int(self.port_line.text())
                 connection_type = 'Ethernet'
             else:
+                global AUTO_CONNECTION
+                connection_type = 'USB'
+                if self.local_auto_status:
+                    AUTO_CONNECTION = True
+                    self.done(1)
+                else:
+                    AUTO_CONNECTION = False
+                    self.done(1)
                 global powermeter_com_port
                 global powermeter_baud_rate
                 powermeter_com_port = self.com_port_box.currentText()
-                powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
-                powermeter_baud_rate = int(self.baud_rate_line.text())
-                connection_type = 'USB'
+                try:
+                    powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
+                except IndexError:
+                    return
+                powermeter_baud_rate = int(self.baud_rate_line.text())                
             self.done(1)
         else:
             self.done(0)
+    
+    def set_auto_connection(self):
+        if self.checkBox.isChecked():
+            self.com_port_box.setEnabled(False)
+            self.rescan_btn.setEnabled(False)
+            self.baud_rate_line.setEnabled(False)
+            self.local_auto_status = True
+        else:
+            self.com_port_box.setEnabled(True)
+            self.rescan_btn.setEnabled(True)
+            self.baud_rate_line.setEnabled(True)
+            self.local_auto_status = False
         
         
         
