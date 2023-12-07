@@ -73,6 +73,8 @@ from statistics import stdev
 
 pg.setConfigOptions(antialias=True)
 # Static
+powermeter_type = 'Gentec-EO'
+
 powermeter_ip_address = "172.16.16.84"
 
 powermeter_port = 5000
@@ -83,50 +85,93 @@ powermeter_com_port = ''
 
 connection_type = 'Ethernet'
 
-commands_dict = {'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR:WAV'), 
-                 'maestro':('*VER?', '*CVU', '*GWL', '*PWC')}
+commands_dict = {'Thorlabs': 
+                      {'who_are_you':'*IDN?',
+                       'who_are_you_answ':'',
+                       'get_power':'MEAS:POW?', 
+                       'get_wavelength':'SENS:CORR:WAV?', 
+                       'set_wave_lenght':'SENS:CORR:WAV'}, 
+                     'Gentec-EO':
+                        {'who_are_you':'*VER?', 
+                          'get_power':'*CVU', 
+                          'get_wavelength':'*GWL', 
+                          'set_wave_lenght':'*PWC'}
+                        }
 
 
+class PowermeterAgent():
+    def __init__(self, connection_type, powermeter_type):
+        self.connection_type = connection_type
+        self.powermeter_type = powermeter_type
+        
+        if connection_type == 'USB':
+            self.device = self.connect_by_usb()
+        elif connection_type == 'Ethernet':
+            self.device = self.connect_by_ethernet()
+        
+    def connect_by_usb(self):
+        if self.powermeter_type == '-Phantom-':
+            return Powermeter(None)
+        else: #Gentec-EO или Thorlabs            
+            rm = pyvisa.ResourceManager()
+            resources_list = rm.list_resources()
+            if not resources_list:
+                raise Exception('Нет подключённых устройств')
+            else:
+                for instrument in resources_list:
+                    
+                    test_instrument = rm.open_resource(instrument)
+                    test_instrument.baud_rate = powermeter_baud_rate
+                    in_data = test_instrument.query(
+                        commands_dict[self.powermeter_type]['who_are_you'])
+                    if (self.powermeter_type == 'Gentec-EO' and 
+                        'version' in in_data.lower()):
+                        return GentecPowermeter(test_instrument)
+                    elif (self.powermeter_type == 'Thorlabs' and 
+                        '' in in_data.lower()): #TODO Добавить кодовое слово для торлабса
+                        return ThorlabsPowermeter(test_instrument)
+
+
+                    
+    def connect_by_ethernet(self):
+        addr = (powermeter_ip_address, powermeter_port)
+        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        self.tcp_socket.settimeout(4.0)
+        try:
+            self.tcp_socket.connect(addr)
+            out_data = str.encode("*VER")
+            self.tcp_socket.send(out_data)
+            in_data = self.tcp_socket.recv(1024)
+            in_data = bytes.decode(in_data)
+            self.show_info("Измеритель мощности подключён: " + in_data)
+            wavelength = self.get_wave_length()
+            self.wave_length_line.setText(wavelength)
+            self.wave_length = int(wavelength)
+        except timeout:
+            self.show_info("Не удалось подключиться к измерителю мощности :(")
+            return
+    
+        self.disconnect_powermeter_btn.setEnabled(True)
+        self.connect_powermeter_btn.setEnabled(False)
+        self.allow_to_measure()
 
 class Powermeter():
     #TODO Дописать тут новый класс, где будут все измерители, в т.ч. сделать фантом
-    def __init__(self):
+    def __init__(self, powermeter):
+        self.powermeter = powermeter
+    def set_wavelength(self):
         pass
-    
+    def get_wavelength(self):
+        pass        
     def get_point(self):
-        
-        """
-        Делается запрос 5 точек от измерителя с паузой в 150 мс, затем 
-        высчитывается станадартное отклонение и среднее. Если 
-        ст.откл/среднее > threshold_value. То возвращается None, в противном 
-        случае среднее.
+        return 1
 
-        Returns
-        -------
-        power_value : float.
-
-        """
-        threshold_value = 0.5     
-        
-        average_list = []
-        
-        for _ in range(5):
-            if connection_type == 'USB':
-                answer = self.my_instrument.query(commands_dict[self.device][1])
-            else:
-                self.tcp_socket.send(str.encode("*CVU"))
-                answer = bytes.decode(self.tcp_socket.recv(1024))
-            average_list.append(float(answer))
-            QtCore.QThread.msleep(150)
-        
-        power_value = mean(average_list)
-        
-        st_otkl = stdev(average_list)
-        
-        if st_otkl / power_value > threshold_value:
-            return None
-        else:
-            return power_value
+class GentecPowermeter(Powermeter):
+    def some_method(self):
+        pass
+class ThorlabsPowermeter(Powermeter):
+    def another_method(self):
+        pass
 
 class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self):
@@ -242,6 +287,23 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         
         
     def connect_powermeter(self):
+        #TODO поместить это после вызова класса PowermeterAgent
+        # except Exception as e:
+        #     self.show_info(str(e))
+        
+                    # if self.device:
+                    #     self.show_info("Измеритель мощности подключён: " + in_data)
+                    #     wavelength = self.get_wave_length()
+                    #     self.wave_length_line.setText(wavelength)
+                    #     self.wave_length = int(wavelength)
+                    
+                    # else:
+                    #     self.show_info("Ошибка запроса на подключённое устройство")
+                    #     return        
+                    # self.disconnect_powermeter_btn.setEnabled(True)
+                    # self.connect_powermeter_btn.setEnabled(False)
+                    # self.allow_to_measure()
+        
         if connection_type == 'USB':
             self.device = ''
             rm = pyvisa.ResourceManager()
@@ -903,12 +965,13 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
                 
     def rescan_com_ports(self):
         self.com_port_box.clear()
-        rm = pyvisa.ResourceManager()
-        info = rm.list_resources_info()
-        keys_list = info.keys()
-        ports_list = []
-        for key in keys_list:
-            ports_list.append("{} -> {}".format(info[key].alias, key))
+        # rm = pyvisa.ResourceManager()
+        # info = rm.list_resources_info()
+        # keys_list = info.keys()
+        # ports_list = []
+        # for key in keys_list:
+        #     ports_list.append("{} -> {}".format(info[key].alias, key))
+        ports_list = ['Gentec-EO', 'Thorlabs', '-Phantom-']
         self.com_port_box.addItems(ports_list)
     
     def save_and_exit(self):
@@ -923,8 +986,10 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
             else:
                 global powermeter_com_port
                 global powermeter_baud_rate
-                powermeter_com_port = self.com_port_box.currentText()
-                powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
+                global powermeter_type
+                # powermeter_com_port = self.com_port_box.currentText()
+                # powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
+                powermeter_type = self.com_port_box.currentText()
                 powermeter_baud_rate = int(self.baud_rate_line.text())
                 connection_type = 'USB'
             self.done(1)
