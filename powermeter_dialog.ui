@@ -26,7 +26,7 @@
     <string>Ethernet</string>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
   </widget>
   <widget class="QRadioButton" name="radioButton_2">
@@ -40,6 +40,9 @@
    </property>
    <property name="text">
     <string>USB</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QWidget" name="layoutWidget">
@@ -73,6 +76,9 @@
     </item>
     <item row="0" column="1">
      <widget class="QLineEdit" name="ip_line">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="minimumSize">
        <size>
         <width>140</width>
@@ -96,6 +102,9 @@
     </item>
     <item row="1" column="1">
      <widget class="QLineEdit" name="port_line">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="minimumSize">
        <size>
         <width>140</width>
@@ -112,15 +121,32 @@
      <x>20</x>
      <y>110</y>
      <width>193</width>
-     <height>79</height>
+     <height>102</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QComboBox" name="com_port_box"/>
+     <widget class="QCheckBox" name="checkBox">
+      <property name="text">
+       <string>Авто</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="com_port_box">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="rescan_btn">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="maximumSize">
        <size>
         <width>75</width>
