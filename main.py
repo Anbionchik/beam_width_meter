@@ -30,26 +30,26 @@ except ModuleNotFoundError:
     connection_type = 'Ethernet'
     
 
-# Dependences
+# # Dependences
     
-# For correct usage of the library libximc,
-# you need to add the file pyximc.py wrapper with the structures of the library to python path.
-cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
-ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
-sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+# # For correct usage of the library libximc,
+# # you need to add the file pyximc.py wrapper with the structures of the library to python path.
+# cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+# ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+# sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
-# Depending on your version of Windows, add the path to the required DLLs to the environment variable
-# bindy.dll
-# libximc.dll
-# xiwrapper.dll
-if platform.system() == "Windows":
-    # Determining the directory with dependencies for windows depending on the bit depth.
+# # Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# # bindy.dll
+# # libximc.dll
+# # xiwrapper.dll
+# if platform.system() == "Windows":
+#     # Determining the directory with dependencies for windows depending on the bit depth.
     
-    if sys.version_info >= (3,8):
-        os.add_dll_directory(ximc_package_dir)
-        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
-    if not ximc_package_dir in os.environ["Path"]:
-        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+#     if sys.version_info >= (3,8):
+#         os.add_dll_directory(ximc_package_dir)
+#         os.add_dll_directory(os.path.abspath('c:/windows/system32'))
+#     if not ximc_package_dir in os.environ["Path"]:
+#         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
 
 try: 
     import pyximc
@@ -107,14 +107,14 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.step_along_value = 1  
         self.wait_time = 1000 # в мс
         self.beam_threshold = 0.3
-        self.steps_across = 38
+        self.steps_across = 100
         self.steps_along = 1
         self.value_M2 = None
         self.default_sigma = 0.3
         self.faster_flag = True  
         self.results_saved = True
         
-        self.threshold_line.setText('0.137')
+        self.threshold_line.setText('0.135')
         self.step_across_beam.setText(str(self.step_across_value))
         self.step_along_beam.setText(str(self.step_along_value))
         self.step_across_beam_n.setText(str(self.steps_across))
@@ -254,10 +254,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.wave_length = int(wavelength)
             else:
                 if AUTO_CONNECTION:
-                    self.show_info("Подключение в автоматическом режиме не удалось")
+                    self.show_info("Подключение в автоматическом режиме не удалось,")
                     self.show_info("попробуйте подключение в ручном режиме")
                 else:
-                    self.show_info("Ошибка запроса на подключённое устройство")
+                    self.show_info("Ошибка подключения к целевому устройству")
                 return
         
         else:
@@ -275,7 +275,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.wave_length_line.setText(wavelength)
                 self.wave_length = int(wavelength)
             except timeout:
-                self.show_info("Не удалось подключиться к измерителю мощности :(")
+                self.show_info("Не удалось подключиться к измерителю мощности")
                 return
         
         self.disconnect_powermeter_btn.setEnabled(True)

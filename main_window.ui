@@ -245,7 +245,7 @@ border:2px solid #305f70;
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Move X</string>
+                 <string>Перемещение X</string>
                 </property>
                </widget>
               </item>
@@ -271,7 +271,7 @@ border:2px solid #305f70;
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Move  Y</string>
+                 <string>Перемещение  Y</string>
                 </property>
                </widget>
               </item>
