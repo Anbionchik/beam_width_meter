@@ -30,27 +30,28 @@ except ModuleNotFoundError:
     without_USB = True
     connection_type = 'Ethernet'
     
-# КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller
+# КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ˅ ˅ ˅ ˅
 # Dependences
     
 # For correct usage of the library libximc,
 # you need to add the file pyximc.py wrapper with the structures of the library to python path.
-cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
-ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
-sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+# cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+# ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+# sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
-# Depending on your version of Windows, add the path to the required DLLs to the environment variable
-# bindy.dll
-# libximc.dll
-# xiwrapper.dll
-if platform.system() == "Windows":
-    # Determining the directory with dependencies for windows depending on the bit depth.
+# # Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# # bindy.dll
+# # libximc.dll
+# # xiwrapper.dll
+# if platform.system() == "Windows":
+#     # Determining the directory with dependencies for windows depending on the bit depth.
     
-    if sys.version_info >= (3,8):
-        os.add_dll_directory(ximc_package_dir)
-        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
-    if not ximc_package_dir in os.environ["Path"]:
-        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+#     if sys.version_info >= (3,8):
+#         os.add_dll_directory(ximc_package_dir)
+#         os.add_dll_directory(os.path.abspath('c:/windows/system32'))
+#     if not ximc_package_dir in os.environ["Path"]:
+#         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+# КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ^ ^ ^ ^
 
 try: 
     import pyximc_wrapper.pyximc
@@ -106,7 +107,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
         self.step_across_value = 0.01
         self.step_along_value = 1  
-        self.wait_time = 1000 # в мс
+        self.wait_time = 1000 # пауза перед измерением каждой точки в мс
+        self.relax_pause = 30000 # пауза перед началом нового цикла шагов поперёк пучка
         self.beam_threshold = 0.3
         self.steps_across = 100
         self.steps_along = 1
@@ -540,10 +542,15 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 sigma = self.default_sigma
             else:
                 sigma = end_point[1] - start_point[1]
-            
-            gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
+            try:                
+                gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list, sigma)
+            except ValueError:
+                return 
         else:
-            gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list)
+            try:
+                gauss_fit, y, popt = get_gauss_fit(self.local_coords_list, self.power_list)
+            except ValueError:
+                return
         
         if not faster_flag and not start_point is None and start_point[0] > 7:
             crds_list = self.local_coords_list[start_point[0] - 7:]
@@ -614,6 +621,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         for j in range(self.steps_along):
             self.inner_diameters_list = []
             self.power_list = []
+            self.intersection_points.setData([],[])
             #Здесь выбор диапазона для range поперёк пучка на основании предыдущего цикла
             if self.faster_flag and j > 0 and self.diameter_edge_array is not None:
                 diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
@@ -717,7 +725,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                            ((self.step_along_value) * (j + 1),0), 
                            self.user_unit)
             if j < self.steps_along -1:
-                QtCore.QThread.msleep(10000) 
+                QtCore.QThread.msleep(self.relax_pause) 
         
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         self.begin_measurment_btn.setEnabled(True)
@@ -790,8 +798,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         symbolBrushs[mypoint_index] = pg.mkBrush(color=(255, 0, 0))
         self.main_points.setData(symbolBrush=symbolBrushs)
         
-        self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Y_pos'])
-        self.power_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Value'])
+        try:
+            self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Y_pos'])
+            self.power_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Value'])
+        except AttributeError:
+            self.show_info("Для просмотра отдельных точек записи сохраните её")
+            self.show_info("и откройте в режиме просмотра.")
         
         self.draw_power(None, None, True)
         self.draw_gauss(None, True, True)
