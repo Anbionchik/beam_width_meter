@@ -35,22 +35,22 @@ except ModuleNotFoundError:
     
 # For correct usage of the library libximc,
 # you need to add the file pyximc.py wrapper with the structures of the library to python path.
-# cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
-# ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
-# sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
-# # Depending on your version of Windows, add the path to the required DLLs to the environment variable
-# # bindy.dll
-# # libximc.dll
-# # xiwrapper.dll
-# if platform.system() == "Windows":
-#     # Determining the directory with dependencies for windows depending on the bit depth.
+# Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# bindy.dll
+# libximc.dll
+# xiwrapper.dll
+if platform.system() == "Windows":
+    # Determining the directory with dependencies for windows depending on the bit depth.
     
-#     if sys.version_info >= (3,8):
-#         os.add_dll_directory(ximc_package_dir)
-#         os.add_dll_directory(os.path.abspath('c:/windows/system32'))
-#     if not ximc_package_dir in os.environ["Path"]:
-#         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+    if sys.version_info >= (3,8):
+        os.add_dll_directory(ximc_package_dir)
+        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
+    if not ximc_package_dir in os.environ["Path"]:
+        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
 # КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ^ ^ ^ ^
 
 try: 

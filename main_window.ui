@@ -279,33 +279,7 @@ border:2px solid #305f70;
             </item>
             <item>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="4" column="1">
-               <widget class="QLineEdit" name="step_along_beam_n">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">color:#dedede</string>
-                </property>
-                <property name="text">
-                 <string>Шаг поперёк пучка, мм</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
+              <item row="0" column="2">
                <widget class="QPushButton" name="disconnect_powermeter_btn">
                 <property name="enabled">
                  <bool>false</bool>
@@ -347,79 +321,7 @@ border:2px solid #305f70;
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QLineEdit" name="step_along_beam">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="1">
-               <widget class="QLabel" name="label_n_along">
-                <property name="styleSheet">
-                 <string notr="true">color: #dedede</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLineEdit" name="step_across_beam">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_2">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">color:#dedede</string>
-                </property>
-                <property name="text">
-                 <string>Шаг вдоль пучка, мм</string>
-                </property>
-               </widget>
-              </item>
-              <item row="3" column="0">
-               <widget class="QLabel" name="label_6">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">color:#dedede</string>
-                </property>
-                <property name="text">
-                 <string>Макс. шагов поперёк</string>
-                </property>
-               </widget>
-              </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_n_across">
-                <property name="styleSheet">
-                 <string notr="true">color: #dedede</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
+              <item row="0" column="1">
                <widget class="QPushButton" name="connect_powermeter_btn">
                 <property name="enabled">
                  <bool>true</bool>
@@ -460,13 +362,85 @@ border:2px solid #ffaa22;
                 </property>
                </widget>
               </item>
-              <item row="4" column="0">
+              <item row="4" column="1">
+               <widget class="QLineEdit" name="step_along_beam_n">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="1">
+               <widget class="QLabel" name="label_n_along">
+                <property name="styleSheet">
+                 <string notr="true">color: #dedede</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="2">
+               <widget class="QLabel" name="label_n_across">
+                <property name="styleSheet">
+                 <string notr="true">color: #dedede</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2">
                <widget class="QLineEdit" name="step_across_beam_n">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QLineEdit" name="step_across_beam">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLabel" name="label">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color:#dedede</string>
+                </property>
+                <property name="text">
+                 <string>Длина шага по оси Y, мм</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLabel" name="label_6">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color:#dedede</string>
+                </property>
+                <property name="text">
+                 <string>Количество шагов по оси Y</string>
                 </property>
                </widget>
               </item>
@@ -482,7 +456,33 @@ border:2px solid #ffaa22;
                  <string notr="true">color:#dedede</string>
                 </property>
                 <property name="text">
-                 <string>Макс. шагов вдоль</string>
+                 <string>Количество шагов по оси X</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="step_along_beam">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_2">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color:#dedede</string>
+                </property>
+                <property name="text">
+                 <string>Длина шага по оси X, мм</string>
                 </property>
                </widget>
               </item>
@@ -758,7 +758,7 @@ border:2px solid #d83526;
   </action>
   <action name="act_save">
    <property name="text">
-    <string>Сохранять в...</string>
+    <string>Сохранить как...</string>
    </property>
   </action>
   <action name="act_saveas">

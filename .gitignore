@@ -130,4 +130,5 @@ dmypy.json
 
 *.bak
 *.bak1
+*.bak2
 ~*.*
