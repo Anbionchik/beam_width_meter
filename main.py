@@ -175,7 +175,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.line_graph.setBackground("#293133")
         self.line_graph.setTitle("Значение мощности")
         self.line_graph.setLabel('left', 'P, W')
-        self.line_graph.setLabel('bottom', 'X, мм')
+        self.line_graph.setLabel('bottom', 'Y, мм')
         self.power_line = self.line_graph.plot([], [], 
                              pen=self.yellow_pen,
                              symbol="t", symbolBrush="#6A5ACD", 
@@ -184,7 +184,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.gauss_graph.setBackground("#293133")
         self.gauss_graph.setTitle("Производная мощности")
         self.gauss_graph.setLabel('left', "P', мм")
-        self.gauss_graph.setLabel('bottom', 'X, мм')
+        self.gauss_graph.setLabel('bottom', 'Y, мм')
         self.gauss_points = self.gauss_graph.plot([], [], pen=None, 
                              symbol="o", symbolBrush="#0000AA", 
                              symbolSize=4)
@@ -214,7 +214,14 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def connect_powermeter(self):
         if connection_type == 'USB':
             self.device = ''
-            rm = pyvisa.ResourceManager()
+            try:
+                rm = pyvisa.ResourceManager()
+            except ValueError as e:
+                if str(e) == "Could not locate a VISA implementation. Install either the IVI binary or pyvisa-py.":
+                    self.show_info("Интерфейс VISA не обнаружен.")
+                else:
+                    self.show_info(str(e))
+                return
             rm.list_resources()
             if AUTO_CONNECTION:
                 if not rm.list_resources():
