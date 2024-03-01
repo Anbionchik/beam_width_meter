@@ -620,7 +620,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.diameter_line.clear()
         self.diameter_edge_array = None
         self.show_info("Начинаем измерение.")
-        self.time_file_name = time.strftime("%d.%m.%y %H_%M_%S", time.localtime())
+        self.time_file_name = time.strftime("%y.%m.%d %H_%M_%S", time.localtime())
         coords = {"x" : 0, "y" : 0}
         point_number = 1
         set_zero(self.device_x, self.device_y)
@@ -705,7 +705,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     
                 self.draw_power(beam_start_point, beam_end_point, self.faster_flag)
                 self.draw_coords((x_pos, y_pos))
-                time_now = time.strftime("%M:%S", time.localtime())
+                time_now = time.strftime("%H:%M:%S", time.localtime())
                 line = (str(point_number) + "," + time_now + "," + 
                         str(x_pos) + "," + str(y_pos) + 
                         "," + str(power_value)).replace("\r\n", "")
@@ -851,10 +851,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def save_results(self):        
         
         raw_res_file = open(self.folder_name + "/" + self.time_file_name + " raw_results.csv", "w")
-        raw_res_file.write("N,Time,X_pos,Y_pos,Value\r")
+        raw_res_file.write("N,Time,X_pos(mm),Y_pos(mm),Value(W)\r")
         
         main_res_file = open(self.folder_name + "/" + self.time_file_name + " results.csv", "w")
-        main_res_file.write("N,X_pos,Diameter\r")
+        main_res_file.write("N,X_pos(mm),Diameter(mm)\r")
         
         for rec in self.raw_res:
             raw_res_file.write(rec)
