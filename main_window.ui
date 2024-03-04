@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1314</width>
-    <height>695</height>
+    <height>675</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -231,6 +231,9 @@ border:2px solid #305f70;
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="placeholderText">
+                 <string>мм</string>
+                </property>
                </widget>
               </item>
               <item row="2" column="1">
@@ -256,6 +259,9 @@ border:2px solid #305f70;
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="placeholderText">
+                 <string>мм</string>
                 </property>
                </widget>
               </item>
@@ -747,6 +753,8 @@ border:2px solid #d83526;
     </property>
     <addaction name="act_save"/>
     <addaction name="act_open"/>
+    <addaction name="separator"/>
+    <addaction name="act_settings"/>
    </widget>
    <addaction name="menu_2"/>
    <addaction name="menu"/>
@@ -769,6 +777,11 @@ border:2px solid #d83526;
   <action name="act_open">
    <property name="text">
     <string>Открыть</string>
+   </property>
+  </action>
+  <action name="act_settings">
+   <property name="text">
+    <string>Параметры</string>
    </property>
   </action>
  </widget>

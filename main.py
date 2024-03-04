@@ -20,6 +20,7 @@ from zipfile import ZipFile
 from statistics import mean
 import platform
 import powermeter_dialog
+import settings_dialog
 
 without_USB = False
 connection_type = 'USB'
@@ -89,13 +90,29 @@ powermeter_com_port = ''
 
 AUTO_CONNECTION = True
 
+SETTINGS_ADDRESS = 'settings.txt'
+MOVEMENT_HISTORY = 'movement_history.txt'
+
+DEFAULT_SETTINGS = {
+    'wait_time': '1000',
+    'relax_pause': '30000',
+    'beam_threshold': '0.3',
+    'faster_flag': 'True',
+    'faster_flag_perc': '0.65',
+    'default_sigma': '0.3',
+    'calibration_ratio':'400'
+                    }
+
+DEFAULT_MOVEMENT_HISTORY = {
+    'step_across_value': '0.01',
+    'step_along_value': '1',
+    'steps_across': '100',
+    'steps_along': '1'
+    }
+
 commands_dict = {'maestro':('*VER?', '*CVU', '*GWL', '*PWC'),
                  'thorlabs': ('*IDN?', 'MEAS:POW?', 'SENS:CORR:WAV?', 'SENS:CORR:WAV') 
                  }
-
-
-
-
 
 class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def __init__(self):
@@ -105,15 +122,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_translator_btn.clicked.connect(self.connect_translator)
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
-        self.step_across_value = 0.01
-        self.step_along_value = 1  
-        self.wait_time = 1000 # пауза перед измерением каждой точки в мс
-        self.relax_pause = 30000 # пауза перед началом нового цикла шагов поперёк пучка
-        self.beam_threshold = 0.3
-        self.steps_across = 100
-        self.steps_along = 1
+        self.deal_with_parameters(SETTINGS_ADDRESS, 'settings')
+        self.deal_with_parameters(MOVEMENT_HISTORY, 'movement_history')
         self.value_M2 = None
-        self.default_sigma = 0.3
         self.faster_flag = True  
         self.results_saved = True
         
@@ -140,6 +151,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         # TODO поменятЬ!
         self.act_open.triggered.connect(self.open_record)
         self.wave_length_line.editingFinished.connect(self.set_wave_length) 
+        
+        self.act_settings.triggered.connect(self.open_settings)
 
         self.folder_name = "../"
         self.file_name = None
@@ -201,16 +214,99 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.powermeter_action.triggered.connect(self.open_dialog)
         self.raw_res = None
         
-        
+    
     def open_dialog(self):
         dlg = DialogPowermeter(powermeter_ip_address,
                                powermeter_port,
                                powermeter_baud_rate)
         result_code = dlg.exec_() 
-        print(result_code) 
+        print(result_code)
     
+    def create_parameters_file(self, file_address, params):
+        with open(file_address, 'w+') as f:
+            for key, value in params.items():
+                f.write(f'{key}={value}\n')            
+    
+    
+    def load_parameters_from_file(self, file_address):
+        params = {}
+        if os.path.isfile(file_address):
+            with open(file_address) as f:
+                for line in f:
+                    key, value = line.split('=')   
+                    params[key] = value.strip('\n')
+            return params
+        else:
+            self.create_settings_file()
+            self.load_parameters()
+            return params
+    
+    def save_parameters(self, file_address, params):
+        if not os.path.isfile(file_address):
+            with open(file_address, 'w+') as f:
+                for key, value in params:
+                    f.write(f'{key}={value}\n')
         
+    def set_parameters(self, wait_time=1000, relax_pause=30000, 
+                       beam_threshold=0.3, faster_flag=True, 
+                       faster_flag_perc=0.65, default_sigma=0.3, 
+                       calibration_ratio=400):        
+        self.wait_time = float(wait_time)
+        self.relax_pause = float(relax_pause)
+        self.beam_threshold = float(beam_threshold)
+        self.faster_flag = bool(faster_flag)
+        self.faster_flag_perc = float(faster_flag_perc)
+        self.default_sigma = float(default_sigma)
+        self.calibration_ratio = float(calibration_ratio)
+    
+    def set_movement_history(self, step_across_value=0.01, 
+                             step_along_value=1, 
+                             steps_across=100, 
+                             steps_along=1):
+        self.step_across_value = float(step_across_value)
+        self.step_along_value = float(step_along_value)
+        self.steps_across = float(steps_across)
+        self.steps_along = float(steps_along)
         
+    def get_parameters(self):
+        params = {}
+        
+        params['wait_time'] = self.wait_time 
+        params['relax_pause'] = self.relax_pause 
+        params['beam_threshold'] = self.beam_threshold
+        params['faster_flag'] = self.faster_flag 
+        params['faster_flag_perc'] = self.faster_flag_perc
+        params['default_sigma'] = self.default_sigma
+        params['calibration_ratio'] = self.calibration_ratio
+        
+        return params
+            
+    def get_movement_history(self):
+        params = {}
+        
+        params['step_across_value'] = self.step_across_value 
+        params['step_along_value'] = self.step_along_value 
+        params['steps_across'] = self.steps_across
+        params['steps_along'] = self.steps_along
+        
+        return params
+    
+    def deal_with_parameters(self, file_address, parameters_type):
+        if not os.path.isfile(file_address):
+            if parameters_type == 'settings':
+                self.set_parameters()
+                settings = self.get_parameters()
+            elif parameters_type == 'movement_history':
+                self.set_movement_history()
+                settings = self.get_movement_history()
+            self.create_parameters_file(file_address, settings)
+        else:
+            settings = self.load_parameters_from_file(file_address)
+            if parameters_type == 'settings':
+                self.set_parameters(**settings)
+            elif parameters_type == 'movement_history':
+                self.set_movement_history(**settings)
+                        
     def connect_powermeter(self):
         if connection_type == 'USB':
             self.device = ''
@@ -833,6 +929,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             return True
         else:
             self.file_name = None
+            
+    def open_settings(self):
+        dialog = SettingsDialog(self.get_parameters())
+        retValue = dialog.exec_()
+
+        print({dialog.Accepted:'Accepted', dialog.Rejected:'Rejected'}[retValue])
         
         
     def closeEvent(self, event):
@@ -842,6 +944,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.disconnect_translator()
         if not self.results_saved:
             self.save_results()
+        settings = self.get_parameters()
+        self.save_parameters(SETTINGS_ADDRESS, settings)
+        movement_history = self.get_movement_history()
+        self.save_parameters(MOVEMENT_HISTORY, movement_history)
         event.accept() # let the window close
     
     def test_func(self):
@@ -897,6 +1003,61 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.file_name = None
             self.results_saved = True
         
+class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
+    def __init__(self, parameters):
+        super().__init__()
+        self.setupUi(self)
+        self.parameters_dict = {
+            'wait_time': self.wait_time_line,
+            'relax_pause': self.relax_pause_line,
+            'beam_threshold': self.beam_threshold_line,
+            'faster_flag_perc': self.faster_flag_points_line,
+            'default_sigma': self.default_sigma_line,
+            'calibration_ratio':self.calb_line
+             }
+        for line in self.parameters_dict.values():
+            line.editingFinished.connect(self.check_value)
+        self.bool_parameters_dict = {
+            'faster_flag':self.faster_flag_check}
+        self.fill_lines(parameters)
+        self.fill_checks(parameters)
+    
+    
+    def accept(self):
+        print('Это изменённый акцепт')
+        self.done(1)
+    
+    def fill_lines(self, parameters):
+        for parameter, value in self.parameters_dict.items():
+            value.setText(str(parameters[parameter]))
+            
+    def fill_checks(self, parameters):
+        for parameter, value in self.bool_parameters_dict.items():
+            value.setChecked(parameters[parameter])
+    
+    def check_value(self, value=None, valid_range:tuple=None):
+        objValidator = QtGui.QDoubleValidator(self)
+        objValidator.setRange(-10.0, 100.0, 5)
+        itemValue.setValidator(objValidator)
+        self.sender()
+        print('valueCheked')
+        return None
+        try:
+            return valid_range[0]<float(value)<valid_range[1]
+        except ValueError:
+            return False
+    
+    def build_parameters_dict(self):
+        parameters = {}
+        
+        for parameter, value in self.parameters_dict.items():
+            parameters[parameter] = value.text()
+    
+    def save_and_exit(self):
+        if self.sender().text() == "OK":
+            self.done(1)
+        else:
+            self.done(0)
 
 class WarnDialog(QtWidgets.QDialog, warn_dialog.Ui_Dialog):
     def __init__(self, warn_message):

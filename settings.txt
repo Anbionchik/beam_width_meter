@@ -1,0 +1,6 @@
+wait_time=1000
+relax_pause=30000
+beam_threshold=0.3
+faster_flag=True
+faster_flag_perc=0.65
+default_sigma=0.3

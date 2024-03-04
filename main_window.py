@@ -12,7 +12,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(1314, 695)
+        MainWindow.resize(1314, 675)
         MainWindow.setAutoFillBackground(False)
         MainWindow.setStyleSheet("QMainWindow{\n"
 "background-color:#293133\n"
@@ -491,9 +491,13 @@ class Ui_MainWindow(object):
         self.act_saveas.setObjectName("act_saveas")
         self.act_open = QtWidgets.QAction(MainWindow)
         self.act_open.setObjectName("act_open")
+        self.act_settings = QtWidgets.QAction(MainWindow)
+        self.act_settings.setObjectName("act_settings")
         self.menu.addAction(self.powermeter_action)
         self.menu_2.addAction(self.act_save)
         self.menu_2.addAction(self.act_open)
+        self.menu_2.addSeparator()
+        self.menu_2.addAction(self.act_settings)
         self.menubar.addAction(self.menu_2.menuAction())
         self.menubar.addAction(self.menu.menuAction())
 
@@ -508,7 +512,9 @@ class Ui_MainWindow(object):
         self.reverse_x_btn.setText(_translate("MainWindow", "Реверс X"))
         self.xy_change_btn.setText(_translate("MainWindow", "X <-> Y"))
         self.reverse_y_btn.setText(_translate("MainWindow", "Реверс Y"))
+        self.shift_x_line.setPlaceholderText(_translate("MainWindow", "мм"))
         self.move_x_btn.setText(_translate("MainWindow", "Перемещение X"))
+        self.shift_y_line.setPlaceholderText(_translate("MainWindow", "мм"))
         self.move_y_btn.setText(_translate("MainWindow", "Перемещение  Y"))
         self.disconnect_powermeter_btn.setText(_translate("MainWindow", "Отключить измеритель"))
         self.connect_powermeter_btn.setText(_translate("MainWindow", "Подключить измеритель"))
@@ -528,5 +534,6 @@ class Ui_MainWindow(object):
         self.act_save.setText(_translate("MainWindow", "Сохранить как..."))
         self.act_saveas.setText(_translate("MainWindow", "Сохранить как..."))
         self.act_open.setText(_translate("MainWindow", "Открыть"))
+        self.act_settings.setText(_translate("MainWindow", "Параметры"))
 
 from pyqtgraph import PlotWidget
