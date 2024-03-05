@@ -1,4 +1,0 @@
-step_across_value=0.01
-step_along_value=1
-steps_across=100
-steps_along=1

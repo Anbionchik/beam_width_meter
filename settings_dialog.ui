@@ -39,23 +39,48 @@
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="6" column="1">
-     <widget class="QLineEdit" name="default_sigma_line"/>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
+    <item row="4" column="0">
+     <widget class="QLabel" name="label_5">
       <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Пауза перед имзерением каждой точки&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>Минимальное количество точек в ускоренном режиме </string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>Ускоренное измерение</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QCheckBox" name="faster_flag_check">
+      <property name="text">
+       <string>Активно</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <widget class="QSpinBox" name="calibration_spin_box">
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="1">
+     <widget class="QDoubleSpinBox" name="default_sigma_spin_box">
+      <property name="decimals">
+       <number>1</number>
       </property>
      </widget>
     </item>
     <item row="4" column="1">
-     <widget class="QLineEdit" name="faster_flag_points_line"/>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Пацза перед началом нового цикла</string>
+     <widget class="QDoubleSpinBox" name="faster_flag_points_spin_box">
+      <property name="decimals">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <double>1.000000000000000</double>
       </property>
      </widget>
     </item>
@@ -66,53 +91,83 @@
       </property>
      </widget>
     </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label_5">
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Минимальное количество точек в ускоренном режиме </string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLineEdit" name="wait_time_line"/>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>Ускоренное измерение</string>
+       <string>Пауза перед началом нового цикла</string>
       </property>
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="QLineEdit" name="beam_threshold_line"/>
-    </item>
-    <item row="1" column="1">
-     <widget class="QLineEdit" name="relax_pause_line"/>
-    </item>
-    <item row="3" column="1">
-     <widget class="QCheckBox" name="faster_flag_check">
-      <property name="text">
-       <string>Активно</string>
+     <widget class="QDoubleSpinBox" name="beam_threshold_spin_box">
+      <property name="decimals">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <double>1.000000000000000</double>
       </property>
      </widget>
     </item>
-    <item row="5" column="0">
+    <item row="1" column="1">
+     <widget class="QSpinBox" name="relax_pause_spin_box">
+      <property name="suffix">
+       <string> мс</string>
+      </property>
+      <property name="maximum">
+       <number>600000</number>
+      </property>
+      <property name="singleStep">
+       <number>1000</number>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0">
      <widget class="QLabel" name="label_6">
       <property name="text">
        <string>Калибровочное соотношение</string>
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
+    <item row="7" column="0">
      <widget class="QLabel" name="label_11">
       <property name="text">
        <string>Sigma (по умолчанию)</string>
       </property>
      </widget>
     </item>
-    <item row="5" column="1">
-     <widget class="QLineEdit" name="calb_line">
+    <item row="0" column="1">
+     <widget class="QSpinBox" name="wait_time_spin_box">
+      <property name="suffix">
+       <string> мс</string>
+      </property>
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+      <property name="singleStep">
+       <number>100</number>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label">
       <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Пауза перед измерением каждой точки&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0">
+     <widget class="QLabel" name="label_7">
+      <property name="text">
+       <string>Минимальный отступ от границы пучка</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="1">
+     <widget class="QSpinBox" name="faster_edge_points_spin_box">
+      <property name="suffix">
+       <string> точек</string>
+      </property>
+      <property name="prefix">
        <string/>
       </property>
      </widget>

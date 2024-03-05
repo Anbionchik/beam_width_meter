@@ -97,17 +97,18 @@ DEFAULT_SETTINGS = {
     'wait_time': '1000',
     'relax_pause': '30000',
     'beam_threshold': '0.3',
-    'faster_flag': 'True',
+    'faster_flag': 'False',
     'faster_flag_perc': '0.65',
+    'faster_edge_points':'25',
     'default_sigma': '0.3',
     'calibration_ratio':'400'
                     }
 
 DEFAULT_MOVEMENT_HISTORY = {
-    'step_across_value': '0.01',
-    'step_along_value': '1',
-    'steps_across': '100',
-    'steps_along': '1'
+    'step_across_beam': '0.01',
+    'step_along_beam': '1',
+    'steps_across_beam_n': '100',
+    'steps_along_beam_n': '1'
     }
 
 commands_dict = {'maestro':('*VER?', '*CVU', '*GWL', '*PWC'),
@@ -124,8 +125,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
         self.deal_with_parameters(SETTINGS_ADDRESS, 'settings')
         self.deal_with_parameters(MOVEMENT_HISTORY, 'movement_history')
+        self.params_setter()
         self.value_M2 = None
-        self.faster_flag = True  
         self.results_saved = True
         
         self.threshold_line.setText('0.135')
@@ -242,31 +243,32 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             return params
     
     def save_parameters(self, file_address, params):
-        if not os.path.isfile(file_address):
-            with open(file_address, 'w+') as f:
-                for key, value in params:
-                    f.write(f'{key}={value}\n')
+        with open(file_address, 'w+') as f:
+            for key, value in params.items():
+                f.write(f'{key}={value}\n')
         
     def set_parameters(self, wait_time=1000, relax_pause=30000, 
-                       beam_threshold=0.3, faster_flag=True, 
-                       faster_flag_perc=0.65, default_sigma=0.3, 
+                       beam_threshold=0.3, faster_flag=False, 
+                       faster_flag_perc=0.65, faster_edge_points=25,
+                       default_sigma=0.3, 
                        calibration_ratio=400):        
-        self.wait_time = float(wait_time)
-        self.relax_pause = float(relax_pause)
+        self.wait_time = int(wait_time)
+        self.relax_pause = int(relax_pause)
         self.beam_threshold = float(beam_threshold)
-        self.faster_flag = bool(faster_flag)
+        self.faster_flag = True if faster_flag == "True" else False
         self.faster_flag_perc = float(faster_flag_perc)
+        self.faster_edge_points = int(faster_edge_points)
         self.default_sigma = float(default_sigma)
         self.calibration_ratio = float(calibration_ratio)
     
-    def set_movement_history(self, step_across_value=0.01, 
-                             step_along_value=1, 
-                             steps_across=100, 
-                             steps_along=1):
-        self.step_across_value = float(step_across_value)
-        self.step_along_value = float(step_along_value)
-        self.steps_across = float(steps_across)
-        self.steps_along = float(steps_along)
+    def set_movement_history(self, step_across_beam=0.01, 
+                             step_along_beam=1, 
+                             step_across_beam_n=100, 
+                             step_along_beam_n=1):
+        self.step_across_beam.setText(str(step_across_beam))
+        self.step_along_beam.setText(str(step_along_beam))
+        self.step_across_beam_n.setText(str(step_across_beam_n))
+        self.step_along_beam_n.setText(str(step_along_beam_n))
         
     def get_parameters(self):
         params = {}
@@ -276,6 +278,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         params['beam_threshold'] = self.beam_threshold
         params['faster_flag'] = self.faster_flag 
         params['faster_flag_perc'] = self.faster_flag_perc
+        params['faster_edge_points'] = self.faster_edge_points
         params['default_sigma'] = self.default_sigma
         params['calibration_ratio'] = self.calibration_ratio
         
@@ -284,10 +287,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def get_movement_history(self):
         params = {}
         
-        params['step_across_value'] = self.step_across_value 
-        params['step_along_value'] = self.step_along_value 
-        params['steps_across'] = self.steps_across
-        params['steps_along'] = self.steps_along
+        params['step_across_beam'] = self.step_across_beam.text()
+        params['step_along_beam'] = self.step_along_beam.text()
+        params['step_across_beam_n'] = self.step_across_beam_n.text()
+        params['step_along_beam_n'] = self.step_along_beam_n.text()
         
         return params
     
@@ -729,8 +732,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             if self.faster_flag and j > 0 and self.diameter_edge_array is not None:
                 diameter_start_point = self.diameter_edge_array[0] // self.step_across_value
                 diameter_end_point = self.diameter_edge_array[1] // self.step_across_value
-                range_start_value =  diameter_start_point - 25 if diameter_start_point > 25 else 0
-                range_end_value = diameter_end_point + 25 if diameter_end_point + 25 < self.steps_across else self.steps_across
+                range_start_value =  diameter_start_point - self.faster_edge_points if diameter_start_point > self.faster_edge_points else 0
+                range_end_value = diameter_end_point + self.faster_edge_points if diameter_end_point + self.faster_edge_points < self.steps_across else self.steps_across
                 across_range = range(int(range_start_value), int(range_end_value))
             else:
                 range_start_value = None
@@ -748,10 +751,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                     self.begin_measurment_btn.setEnabled(True)
                     self.interrupt_btn.setEnabled(False)  
                     return
-                #Преждевременный выход первые три цикла только после 65% точек
+                #Преждевременный выход только после faster_flag_perc точек
                 if not self.faster_flag:                        
                     if not beam_end_point is None and self.diameter_line.text() != "":
-                        if i - beam_end_point[0] > 20 and j < 3 and i > (self.steps_across * 0.65):
+                        if i - beam_end_point[0] > 20 and i > (self.steps_across * self.faster_flag_perc):
                             break
                 
                 self.update()
@@ -778,7 +781,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.local_coords_list.append(y_pos)
                 
                 if beam_start_point is None and len(self.power_list) > 6:
-                    if ((mean(self.power_list[-2:-1]) - mean(self.power_list[-6:-3])) / 
+                    if ((mean(self.power_list[-1:-3:-1]) - mean(self.power_list[-6:-3])) / 
                         mean(self.power_list[-6:-3]) > self.beam_threshold):
                         
                         beam_start_point = (i, y_pos)
@@ -933,8 +936,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     def open_settings(self):
         dialog = SettingsDialog(self.get_parameters())
         retValue = dialog.exec_()
-
-        print({dialog.Accepted:'Accepted', dialog.Rejected:'Rejected'}[retValue])
+        
+        if retValue == QtWidgets.QDialog.Accepted:
+            settings = dialog.parameters
+            self.set_parameters(**settings)
         
         
     def closeEvent(self, event):
@@ -1008,15 +1013,14 @@ class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
         super().__init__()
         self.setupUi(self)
         self.parameters_dict = {
-            'wait_time': self.wait_time_line,
-            'relax_pause': self.relax_pause_line,
-            'beam_threshold': self.beam_threshold_line,
-            'faster_flag_perc': self.faster_flag_points_line,
-            'default_sigma': self.default_sigma_line,
-            'calibration_ratio':self.calb_line
+            'wait_time': self.wait_time_spin_box,
+            'relax_pause': self.relax_pause_spin_box,
+            'beam_threshold': self.beam_threshold_spin_box,
+            'faster_flag_perc': self.faster_flag_points_spin_box,
+            'faster_edge_points':self.faster_edge_points_spin_box,
+            'default_sigma': self.default_sigma_spin_box,
+            'calibration_ratio':self.calibration_spin_box
              }
-        for line in self.parameters_dict.values():
-            line.editingFinished.connect(self.check_value)
         self.bool_parameters_dict = {
             'faster_flag':self.faster_flag_check}
         self.fill_lines(parameters)
@@ -1024,40 +1028,28 @@ class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
     
     
     def accept(self):
-        print('Это изменённый акцепт')
+        self.parameters = self.build_parameters_dict()
         self.done(1)
     
     def fill_lines(self, parameters):
         for parameter, value in self.parameters_dict.items():
-            value.setText(str(parameters[parameter]))
+            value.setValue(parameters[parameter])
             
     def fill_checks(self, parameters):
         for parameter, value in self.bool_parameters_dict.items():
             value.setChecked(parameters[parameter])
     
-    def check_value(self, value=None, valid_range:tuple=None):
-        objValidator = QtGui.QDoubleValidator(self)
-        objValidator.setRange(-10.0, 100.0, 5)
-        itemValue.setValidator(objValidator)
-        self.sender()
-        print('valueCheked')
-        return None
-        try:
-            return valid_range[0]<float(value)<valid_range[1]
-        except ValueError:
-            return False
     
     def build_parameters_dict(self):
         parameters = {}
         
         for parameter, value in self.parameters_dict.items():
-            parameters[parameter] = value.text()
-    
-    def save_and_exit(self):
-        if self.sender().text() == "OK":
-            self.done(1)
-        else:
-            self.done(0)
+            parameters[parameter] = str(value.value())
+        for parameter, value in self.bool_parameters_dict.items():
+            parameters[parameter] = str(value.isChecked())        
+            
+        return parameters
+
 
 class WarnDialog(QtWidgets.QDialog, warn_dialog.Ui_Dialog):
     def __init__(self, warn_message):

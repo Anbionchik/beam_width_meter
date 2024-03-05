@@ -1,0 +1,4 @@
+step_across_beam=0.01
+step_along_beam=1.0
+step_across_beam_n=100
+step_along_beam_n=1
