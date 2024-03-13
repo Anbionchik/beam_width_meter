@@ -547,7 +547,7 @@ border:2px solid #ffaa22;
                  <string notr="true">color:#dedede</string>
                 </property>
                 <property name="text">
-                 <string>Диаметр</string>
+                 <string>Диаметр, мм</string>
                 </property>
                </widget>
               </item>
@@ -557,7 +557,7 @@ border:2px solid #ffaa22;
                  <string notr="true">color:#dedede</string>
                 </property>
                 <property name="text">
-                 <string>Длина волны</string>
+                 <string>Длина волны, нм</string>
                 </property>
                </widget>
               </item>
