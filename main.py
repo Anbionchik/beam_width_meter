@@ -13,6 +13,7 @@ import warn_dialog
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
 from pyqtgraph import PlotWidget
+from LedIndicatorWidget import LedIndicator
 import pyqtgraph as pg
 import pandas as pd
 from zipfile import ZipFile
@@ -123,6 +124,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.connect_translator_btn.clicked.connect(self.connect_translator)
         self.begin_measurment_btn.clicked.connect(self.execute_measurment)
         self.interrupt_btn.clicked.connect(self.interrupt_measurment)
+        
+        #ЛЕД-индикатор ускоренного измерения
+        self.led = LedIndicator(self)
+        self.led.setDisabled(True)  # Make the led non clickable
+        self.led.setMinimumSize(15, 15)
+        self.horizontalLayout_8.insertWidget(0, self.led)
+        
         self.deal_with_parameters(SETTINGS_ADDRESS, 'settings')
         self.deal_with_parameters(MOVEMENT_HISTORY, 'movement_history')
         self.params_setter()
@@ -154,6 +162,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.wave_length_line.editingFinished.connect(self.set_wave_length) 
         
         self.act_settings.triggered.connect(self.open_settings)
+        
 
         self.folder_name = "../"
         self.file_name = None
@@ -260,6 +269,10 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.faster_edge_points = int(faster_edge_points)
         self.default_sigma = float(default_sigma)
         self.calibration_ratio = float(calibration_ratio)
+        self.set_faster_led_status()
+    
+    def set_faster_led_status(self):
+        self.led.setChecked(self.faster_flag)
     
     def set_movement_history(self, step_across_beam=0.01, 
                              step_along_beam=1, 
