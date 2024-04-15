@@ -8,19 +8,16 @@ Created on Tue Dec 14 10:36:37 2021
 import sys
 import os
 from PyQt5 import QtWidgets, QtCore
-import main_window
-import warn_dialog
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
-from LedIndicatorWidget import LedIndicator
+from src.windows.LedIndicatorWidget import LedIndicator
 import pyqtgraph as pg
 import pandas as pd
 from zipfile import ZipFile
 
 from statistics import mean
 import platform
-import powermeter_dialog
-import settings_dialog
+from src.windows import powermeter_dialog, settings_dialog, main_window, warn_dialog
 
 without_USB = False
 connection_type = 'USB'
@@ -60,17 +57,17 @@ except ImportError:
     print ("Can't import pyximc module. The most probable reason is that you changed the relative location of the test_Python.py and pyximc.py files. See developers' documentation for details.")
     exit()
 
-from translator_controller import (initialize_axes, 
-                                   close_axes, 
-                                   user_calibration,
-                                   movement_setter,
-                                   reverse_engine,                                   
-                                   set_zero,
-                                   test_run,
-                                   get_coords,
-                                   move_to_coords,
-                                   shift_move,
-                                   check_edges)
+from src.windows.translator_controller import (initialize_axes,
+                                               close_axes,
+                                               user_calibration,
+                                               movement_setter,
+                                               reverse_engine,
+                                               set_zero,
+                                               test_run,
+                                               get_coords,
+                                               move_to_coords,
+                                               shift_move,
+                                               check_edges)
 from pyximc_wrapper.pyximc import *
 from graph_fit import get_gauss_fit, find_intersection, calculator_M2
 from statistics import stdev
