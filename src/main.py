@@ -12,7 +12,6 @@ import main_window
 import warn_dialog
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
-from pyqtgraph import PlotWidget
 from LedIndicatorWidget import LedIndicator
 import pyqtgraph as pg
 import pandas as pd
@@ -74,7 +73,6 @@ from translator_controller import (initialize_axes,
                                    check_edges)
 from pyximc_wrapper.pyximc import *
 from graph_fit import get_gauss_fit, find_intersection, calculator_M2
-import numpy as np
 from statistics import stdev
 
 

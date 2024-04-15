@@ -133,5 +133,5 @@ dmypy.json
 *.bak2
 ~*.*
 
-settings.txt
-movement_history.txt
+src/settings.txt
+src/movement_history.txt
