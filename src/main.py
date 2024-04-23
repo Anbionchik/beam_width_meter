@@ -8,20 +8,16 @@ Created on Tue Dec 14 10:36:37 2021
 import sys
 import os
 from PyQt5 import QtWidgets, QtCore
-import main_window
-import warn_dialog
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
-from pyqtgraph import PlotWidget
-from LedIndicatorWidget import LedIndicator
+from src.windows.LedIndicatorWidget import LedIndicator
 import pyqtgraph as pg
 import pandas as pd
 from zipfile import ZipFile
 
 from statistics import mean
 import platform
-import powermeter_dialog
-import settings_dialog
+from src.windows import powermeter_dialog, settings_dialog, main_window, warn_dialog
 
 without_USB = False
 connection_type = 'USB'
@@ -61,36 +57,29 @@ except ImportError:
     print ("Can't import pyximc module. The most probable reason is that you changed the relative location of the test_Python.py and pyximc.py files. See developers' documentation for details.")
     exit()
 
-from translator_controller import (initialize_axes, 
-                                   close_axes, 
-                                   user_calibration,
-                                   movement_setter,
-                                   reverse_engine,                                   
-                                   set_zero,
-                                   test_run,
-                                   get_coords,
-                                   move_to_coords,
-                                   shift_move,
-                                   check_edges)
+from src.windows.translator_controller import (initialize_axes,
+                                               close_axes,
+                                               user_calibration,
+                                               movement_setter,
+                                               reverse_engine,
+                                               set_zero,
+                                               test_run,
+                                               get_coords,
+                                               move_to_coords,
+                                               shift_move,
+                                               check_edges)
 from pyximc_wrapper.pyximc import *
 from graph_fit import get_gauss_fit, find_intersection, calculator_M2
-import numpy as np
 from statistics import stdev
 
 
 pg.setConfigOptions(antialias=True)
-# Static
-powermeter_ip_address = "172.16.16.84"
-# Dynamic
-# powermeter_ip_address = "172.16.16.84"
-powermeter_port = 5000
 
-powermeter_baud_rate = 115200
-
-powermeter_com_port = ''
-
+POWERMETER_IP_ADDRESS = "172.16.16.84"
+POWERMETER_PORT = 5000
+POWERMETER_BAUD_RATE = 115200
+POWERMETER_COM_PORT = ''
 AUTO_CONNECTION = True
-
 SETTINGS_ADDRESS = 'settings.txt'
 MOVEMENT_HISTORY = 'movement_history.txt'
 
@@ -162,17 +151,16 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.wave_length_line.editingFinished.connect(self.set_wave_length) 
         
         self.act_settings.triggered.connect(self.open_settings)
-        
 
         self.folder_name = "../"
         self.file_name = None
         self.info_field.setEnabled(True)
         
         # Ручки для оформления графиков
-        self.main_graph_pen = pg.mkPen(color=(229,43,80), width=2)
-        self.yellow_pen = pg.mkPen(color=(255,220,51), width=2)
-        self.green_pen = pg.mkPen(color=(68,148,74), width=2)
-        self.purple_pen = pg.mkPen(color=(222,76,138), width = 2)
+        self.main_graph_pen = pg.mkPen(color=(229, 43, 80), width=2)
+        self.yellow_pen = pg.mkPen(color=(255, 220, 51), width=2)
+        self.green_pen = pg.mkPen(color=(68, 148, 74), width=2)
+        self.purple_pen = pg.mkPen(color=(222, 76, 138), width=2)
         
         self.main_graph.setBackground("#293133")
         self.main_graph.setTitle("Основной график")
@@ -223,20 +211,20 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.power_list = []
         self.powermeter_action.triggered.connect(self.open_dialog)
         self.raw_res = None
-        
-    
-    def open_dialog(self):
-        dlg = DialogPowermeter(powermeter_ip_address,
-                               powermeter_port,
-                               powermeter_baud_rate)
+
+    @staticmethod
+    def open_dialog():
+        dlg = DialogPowermeter(POWERMETER_IP_ADDRESS,
+                               POWERMETER_PORT,
+                               POWERMETER_BAUD_RATE)
         result_code = dlg.exec_() 
         print(result_code)
     
-    def create_parameters_file(self, file_address, params):
+    @staticmethod
+    def create_parameters_file(file_address, params):
         with open(file_address, 'w+') as f:
             for key, value in params.items():
-                f.write(f'{key}={value}\n')            
-    
+                f.write(f'{key}={value}\n')
     
     def load_parameters_from_file(self, file_address):
         params = {}
@@ -250,8 +238,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.create_settings_file()
             self.load_parameters()
             return params
-    
-    def save_parameters(self, file_address, params):
+
+    @staticmethod
+    def save_parameters(file_address, params):
         with open(file_address, 'w+') as f:
             for key, value in params.items():
                 f.write(f'{key}={value}\n')
@@ -344,7 +333,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                         break
                     try:
                         _ = rm.open_resource(device)
-                        _.baud_rate = powermeter_baud_rate
+                        _.baud_rate = POWERMETER_BAUD_RATE
                     except VisaIOError as e:
                         continue
                     for k, j in commands_dict.items():
@@ -360,8 +349,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                             break                    
             else:
                 try:
-                    self.my_instrument = rm.open_resource(powermeter_com_port)
-                    self.my_instrument.baud_rate = powermeter_baud_rate
+                    self.my_instrument = rm.open_resource(POWERMETER_COM_PORT)
+                    self.my_instrument.baud_rate = POWERMETER_BAUD_RATE
                 except VisaIOError as e:
                     self.show_info(str(e))
                 
@@ -389,7 +378,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 return
         
         else:
-            addr = (powermeter_ip_address, powermeter_port)
+            addr = (POWERMETER_IP_ADDRESS, POWERMETER_PORT)
             self.tcp_socket = socket(AF_INET, SOCK_STREAM)
             self.tcp_socket.settimeout(4.0)
             try:
@@ -528,9 +517,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             else:
                 self.begin_measurment_btn.setEnabled(False)
         else:
-            self.begin_measurment_btn.setEnabled(False)
-            
-        
+            self.begin_measurment_btn.setEnabled(False)               
     
     def disconnect_powermeter(self):
         if connection_type == 'USB' and self.disconnect_powermeter_btn.isEnabled:
@@ -587,8 +574,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             return True
         except (ValueError, AttributeError):
             return False
-        
-    
+           
     def reverse(self, axis):
         if axis == "X":
             result = reverse_engine(self.device_x)
@@ -613,8 +599,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.main_graph.setYRange(0, max(self.diameters_list) * 1.2)
         except ValueError:
             pass
-        
-        
+                
         if len(self.diameters_list) >= 4:
             
             if not self.wave_length is None:
@@ -651,10 +636,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.power_line.setData(crds_list, pwr_list)
         else:
             self.power_line.setData(self.local_coords_list, self.power_list)
-        
-            
-    
-    
+          
     def draw_gauss(self, start_point, end_point, faster_flag):
         if not end_point is None and not start_point is None:
             if self.default_sigma:
@@ -712,8 +694,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
     
     def change_axes(self):
         self.device_x, self.device_y = self.device_y, self.device_x
-        self.show_info("Ось X -> Ось Y\nОсь Y -> Ось X")
-    
+        self.show_info("Ось X -> Ось Y\nОсь Y -> Ось X")   
     
     def execute_measurment(self):
         if not self.results_saved:
@@ -849,8 +830,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         move_to_coords(self.device_x, self.device_y, (0,0), self.user_unit)
         self.begin_measurment_btn.setEnabled(True)
         self.interrupt_btn.setEnabled(False)
-        self.show_info("Измерение завершено.")
-                
+        self.show_info("Измерение завершено.")                
        
     def interrupt_measurment(self):
         self.interrupt_btn.setEnabled(False)
@@ -870,13 +850,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info("Файл не выбран")
     
     def clear_graphs(self):
-        self.main_points.setData([],[])
-        self.main_curve.setData([],[])
-        self.power_line.setData([],[])
-        self.intersection_points.setData([],[])
-        self.gauss_curve.setData([],[])
-        self.gauss_points.setData([],[])
-        self.translator_move_history = [[],[]]
+        self.main_points.setData([], [])
+        self.main_curve.setData([], [])
+        self.power_line.setData([], [])
+        self.intersection_points.setData([], [])
+        self.gauss_curve.setData([], [])
+        self.gauss_points.setData([], [])
+        self.translator_move_history = [[], []]
             
     def process_record(self, user_record):
         self.main_points.setData(symbolBrush="#44944A")
@@ -886,13 +866,13 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.diameter_line.clear()
         self.diameter_edge_array = None
         
-        zipObj = ZipFile(user_record[0], 'r')
+        zip_obj = ZipFile(user_record[0], 'r')
         self.raw_df, self.main_df = None, None
-        for file in zipObj.namelist():
+        for file in zip_obj.namelist():
             if 'raw_results' in file.lower():
-                self.raw_df = pd.read_csv(zipObj.open(file))
+                self.raw_df = pd.read_csv(zip_obj.open(file))
             elif 'results' in file.lower():
-                self.main_df = pd.read_csv(zipObj.open(file))
+                self.main_df = pd.read_csv(zip_obj.open(file))
         if self.main_df is None or self.raw_df is None:
             self.show_info(f'Архив {user_record[0]} не содержит файлов результатов')
             return
@@ -913,9 +893,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         mypoint = points[0].pos()[0]
         mypoint_index = data_list.index(mypoint)
 
-        symbolBrushs = [None] * len(data_list)
-        symbolBrushs[mypoint_index] = pg.mkBrush(color=(255, 0, 0))
-        self.main_points.setData(symbolBrush=symbolBrushs)
+        symbol_brushs = [None] * len(data_list)
+        symbol_brushs[mypoint_index] = pg.mkBrush(color=(255, 0, 0))
+        self.main_points.setData(symbolBrush=symbol_brushs)
         
         try:
             self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Y_pos'])
@@ -928,8 +908,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.draw_gauss(None, True, True)
         print(points[0].pos())
         self.show_info(str(points[0].pos()))        
-        
-    
+            
     def save_file(self):
         dialog = QtWidgets.QFileDialog(self)
         dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
@@ -948,13 +927,12 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             
     def open_settings(self):
         dialog = SettingsDialog(self.get_parameters())
-        retValue = dialog.exec_()
+        ret_value = dialog.exec_()
         
-        if retValue == QtWidgets.QDialog.Accepted:
+        if ret_value == QtWidgets.QDialog.Accepted:
             settings = dialog.parameters
             self.set_parameters(**settings)
-        
-        
+                
     def closeEvent(self, event):
         if self.disconnect_powermeter_btn.isEnabled():
             self.disconnect_powermeter()
@@ -967,11 +945,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         movement_history = self.get_movement_history()
         self.save_parameters(MOVEMENT_HISTORY, movement_history)
         event.accept() # let the window close
-    
-    def test_func(self):
-        pass
-        
-    
+               
     def save_results(self):        
         
         raw_res_file = open(self.folder_name + "/" + self.time_file_name + " raw_results.csv", "w")
@@ -1020,6 +994,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info(f"Результаты сохранены в: {self.file_name}")
             self.file_name = None
             self.results_saved = True
+
         
 class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
     def __init__(self, parameters):
@@ -1038,8 +1013,7 @@ class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
             'faster_flag':self.faster_flag_check}
         self.fill_lines(parameters)
         self.fill_checks(parameters)
-    
-    
+        
     def accept(self):
         self.parameters = self.build_parameters_dict()
         self.done(1)
@@ -1051,8 +1025,7 @@ class SettingsDialog(QtWidgets.QDialog, settings_dialog.Ui_SettingsDialog):
     def fill_checks(self, parameters):
         for parameter, value in self.bool_parameters_dict.items():
             value.setChecked(parameters[parameter])
-    
-    
+        
     def build_parameters_dict(self):
         parameters = {}
         
@@ -1069,6 +1042,7 @@ class WarnDialog(QtWidgets.QDialog, warn_dialog.Ui_Dialog):
         super().__init__()
         self.setupUi(self)
         self.label.setText(warn_message)
+
 
 class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
     def __init__(self, ip, port, baud_rate):
@@ -1087,9 +1061,7 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
         self.rescan_btn.clicked.connect(self.rescan_com_ports)
         self.ok_btn.clicked.connect(self.save_and_exit)
         self.cancel_btn.clicked.connect(self.save_and_exit)
-        
-                
-        
+                                
     def change_connection_type(self, initial=False):
         if self.sender().text() in ['Ethernet', 'USB']:
             type_to_set = self.sender().text()
@@ -1135,10 +1107,10 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
         if self.sender().text() == "OK":
             global connection_type
             if self.radioButton.isChecked():
-                global powermeter_ip_address
-                global powermeter_port
-                powermeter_ip_address = self.ip_line.text()
-                powermeter_port = int(self.port_line.text())
+                global POWERMETER_IP_ADDRESS
+                global POWERMETER_PORT
+                POWERMETER_IP_ADDRESS = self.ip_line.text()
+                POWERMETER_PORT = int(self.port_line.text())
                 connection_type = 'Ethernet'
             else:
                 global AUTO_CONNECTION
@@ -1149,14 +1121,14 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
                 else:
                     AUTO_CONNECTION = False
                     self.done(1)
-                global powermeter_com_port
-                global powermeter_baud_rate
-                powermeter_com_port = self.com_port_box.currentText()
+                global POWERMETER_COM_PORT
+                global POWERMETER_BAUD_RATE
+                POWERMETER_COM_PORT = self.com_port_box.currentText()
                 try:
-                    powermeter_com_port = powermeter_com_port.split('>')[1].lstrip(' ')
+                    POWERMETER_COM_PORT = POWERMETER_COM_PORT.split('>')[1].lstrip(' ')
                 except IndexError:
                     return
-                powermeter_baud_rate = int(self.baud_rate_line.text())                
+                POWERMETER_BAUD_RATE = int(self.baud_rate_line.text())
             self.done(1)
         else:
             self.done(0)
@@ -1172,21 +1144,19 @@ class DialogPowermeter(QtWidgets.QDialog, powermeter_dialog.Ui_Dialog):
             self.rescan_btn.setEnabled(True)
             self.baud_rate_line.setEnabled(True)
             self.local_auto_status = False
-        
-        
-        
-    
-    
-    
-class MeasurmentHandler(QtCore.QObject):
+   
+            
+class MeasurementHandler(QtCore.QObject):
     running = False
     newTextAndColor = QtCore.pyqtSignal(str, object)  
+
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # Новый экземпляр QApplication
     window = BeamWidthMeterApp()  # Создаём объект класса ExampleApp
     window.show()  # Показываем окно
     app.exec_()  # и запускаем приложение
+
 
 if __name__ == '__main__':  # Если мы запускаем файл напрямую, а не импортируем
     main()  # то запускаем функцию main()
