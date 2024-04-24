@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'main_window.ui'
+# Form implementation generated from reading ui file 'ui/main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -386,18 +386,15 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.begin_measurment_btn.sizePolicy().hasHeightForWidth())
         self.begin_measurment_btn.setSizePolicy(sizePolicy)
         self.begin_measurment_btn.setStyleSheet("QPushButton{\n"
-"box-shadow:inset 0px 1px 0px 0px #d9fbbe;\n"
 "background:linear-gradient(to bottom, #b8e356 5%, #a5cc52 100%);\n"
 "background-color:#b8e356;\n"
 "border-radius:6px;\n"
 "border:1px solid #83c41a;\n"
 "display:inline-block;\n"
-"cursor:pointer;\n"
 "color:#000000;\n"
 "font-family:Arial;\n"
 "font-weight:bold;\n"
 "text-decoration:none;\n"
-"text-shadow:0px 1px 0px #86ae47;\n"
 "}\n"
 "QPushButton:disabled {\n"
 "box-shadow:inset 0px 0px 14px -3px #f2fadc;\n"
@@ -406,7 +403,6 @@ class Ui_MainWindow(object):
 "    border-radius:6px;\n"
 "    border:1px solid #b2b8ad;\n"
 "    display:inline-block;\n"
-"    cursor:pointer;\n"
 "    color:#757d6f;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
@@ -436,33 +432,27 @@ class Ui_MainWindow(object):
         font.setStrikeOut(False)
         self.interrupt_btn.setFont(font)
         self.interrupt_btn.setStyleSheet("QPushButton#interrupt_btn{\n"
-"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
 "    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
 "    background-color:#fe1a00;\n"
 "    border-radius:6px;\n"
 "    border:1px solid #d83526;\n"
 "    display:inline-block;\n"
-"    cursor:pointer;\n"
 "    color:#ffffff;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
 "    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #b23e35;\n"
 "}\n"
 "\n"
 "QPushButton#interrupt_btn:disabled {\n"
-"    box-shadow:inset 0px 1px 0px 0px #f29c93;\n"
 "    background:linear-gradient(to bottom, #fe1a00 5%, #ce0100 100%);\n"
 "    background-color:#ffa196;\n"
 "    border-radius:6px;\n"
 "    border:1px solid #ab6b63;\n"
 "    display:inline-block;\n"
-"    cursor:pointer;\n"
 "    color:#ffffff;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
 "    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #b23e35;\n"
 "}\n"
 "\n"
 "QPushButton#interrupt_btn:pressed{\n"
