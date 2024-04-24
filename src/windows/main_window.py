@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/main_window.ui'
+# Form implementation generated from reading ui file 'src/windows/ui/main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -82,7 +82,6 @@ class Ui_MainWindow(object):
         self.connect_translator_btn.setSizePolicy(sizePolicy)
         self.connect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.connect_translator_btn.setStyleSheet("QPushButton{\n"
-"box-shadow:inset 0px 1px 0px 0px #fff6af;\n"
 "    background:linear-gradient(to bottom, #ffec64 5%, #ffab23 100%);\n"
 "    background-color:#ffec64;\n"
 "    border-radius:6px;\n"
@@ -109,7 +108,6 @@ class Ui_MainWindow(object):
         self.disconnect_translator_btn.setSizePolicy(sizePolicy)
         self.disconnect_translator_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.disconnect_translator_btn.setStyleSheet("QPushButton{\n"
-"box-shadow: 0px 10px 14px -7px #276873;\n"
 "    background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);\n"
 "    background-color:#599bb3;\n"
 "    border:1px solid #305f70;\n"
@@ -201,7 +199,6 @@ class Ui_MainWindow(object):
         self.disconnect_powermeter_btn.setSizePolicy(sizePolicy)
         self.disconnect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.disconnect_powermeter_btn.setStyleSheet("QPushButton{\n"
-"box-shadow: 0px 10px 14px -7px #276873;\n"
 "    background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);\n"
 "    background-color:#599bb3;\n"
 "    border:1px solid #305f70;\n"
@@ -229,7 +226,6 @@ class Ui_MainWindow(object):
         self.connect_powermeter_btn.setSizePolicy(sizePolicy)
         self.connect_powermeter_btn.setMinimumSize(QtCore.QSize(0, 24))
         self.connect_powermeter_btn.setStyleSheet("QPushButton{\n"
-"box-shadow:inset 0px 1px 0px 0px #fff6af;\n"
 "    background:linear-gradient(to bottom, #ffec64 5%, #ffab23 100%);\n"
 "    background-color:#ffec64;\n"
 "    border-radius:6px;\n"
@@ -390,24 +386,20 @@ class Ui_MainWindow(object):
 "background-color:#b8e356;\n"
 "border-radius:6px;\n"
 "border:1px solid #83c41a;\n"
-"display:inline-block;\n"
 "color:#000000;\n"
 "font-family:Arial;\n"
 "font-weight:bold;\n"
 "text-decoration:none;\n"
 "}\n"
 "QPushButton:disabled {\n"
-"box-shadow:inset 0px 0px 14px -3px #f2fadc;\n"
 "    background:linear-gradient(to bottom, #dbe6c4 5%, #9ba892 100%);\n"
 "    background-color:#dbe6c4;\n"
 "    border-radius:6px;\n"
 "    border:1px solid #b2b8ad;\n"
-"    display:inline-block;\n"
 "    color:#757d6f;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
 "    text-decoration:none;\n"
-"    text-shadow:0px 1px 0px #ced9bf;\n"
 "}\n"
 "QPushButton:pressed{\n"
 "background-color:#9ede16\n"
@@ -436,7 +428,6 @@ class Ui_MainWindow(object):
 "    background-color:#fe1a00;\n"
 "    border-radius:6px;\n"
 "    border:1px solid #d83526;\n"
-"    display:inline-block;\n"
 "    color:#ffffff;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
@@ -448,7 +439,6 @@ class Ui_MainWindow(object):
 "    background-color:#ffa196;\n"
 "    border-radius:6px;\n"
 "    border:1px solid #ab6b63;\n"
-"    display:inline-block;\n"
 "    color:#ffffff;\n"
 "    font-family:Arial;\n"
 "    font-weight:bold;\n"
