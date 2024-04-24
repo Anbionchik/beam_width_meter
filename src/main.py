@@ -258,6 +258,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.faster_edge_points = int(faster_edge_points)
         self.default_sigma = float(default_sigma)
         self.calibration_ratio = float(calibration_ratio)
+        self.user_unit = user_calibration(self.calibration_ratio)
         self.set_faster_led_status()
     
     def set_faster_led_status(self):
@@ -756,8 +757,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 coords["x"] = self.step_along_value * j
                 coords["y"] = self.step_across_value * i
                 
+                
                 move_to_coords(self.device_x, self.device_y, 
-                               (coords["x"],coords["y"]), self.user_unit)
+                                (coords["x"],coords["y"]), self.user_unit)
                 QtCore.QThread.msleep(self.wait_time) 
                 
                 power_value = None
