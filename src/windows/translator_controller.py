@@ -95,9 +95,9 @@ def close_axes(device_id_x, device_id_y):
     lib.close_device(byref(cast(device_id_x, POINTER(c_int))))
     lib.close_device(byref(cast(device_id_y, POINTER(c_int))))
     
-def user_calibration():
+def user_calibration(calibration_ratio):
     user_unit = calibration_t()
-    user_unit.A = 0.0025
+    user_unit.A = 1 / calibration_ratio
     user_unit.MicrostepMode = True
     return user_unit
 
