@@ -10,14 +10,14 @@ import os
 from PyQt5 import QtWidgets, QtCore
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 import time
-from src.windows.LedIndicatorWidget import LedIndicator
+from windows.LedIndicatorWidget import LedIndicator
 import pyqtgraph as pg
 import pandas as pd
 from zipfile import ZipFile
 
 from statistics import mean
 import platform
-from src.windows import powermeter_dialog, settings_dialog, main_window, warn_dialog
+from windows import powermeter_dialog, settings_dialog, main_window, warn_dialog
 
 without_USB = False
 connection_type = 'USB'
@@ -33,23 +33,23 @@ except ModuleNotFoundError:
     
 # For correct usage of the library libximc,
 # you need to add the file pyximc.py wrapper with the structures of the library to python path.
-cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
-ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
-sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+# cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+# ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+# sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
 # Depending on your version of Windows, add the path to the required DLLs to the environment variable
 # bindy.dll
 # libximc.dll
 # xiwrapper.dll
-if platform.system() == "Windows":
-    # Determining the directory with dependencies for windows depending on the bit depth.
+# if platform.system() == "Windows":
+#     # Determining the directory with dependencies for windows depending on the bit depth.
     
-    if sys.version_info >= (3,8):
-        os.add_dll_directory(ximc_package_dir)
-        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
-    if not ximc_package_dir in os.environ["Path"]:
-        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
-# КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ^ ^ ^ ^
+#     if sys.version_info >= (3,8):
+#         os.add_dll_directory(ximc_package_dir)
+#         os.add_dll_directory(os.path.abspath('c:/windows/system32'))
+#     if not ximc_package_dir in os.environ["Path"]:
+#         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+# # КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ^ ^ ^ ^
 
 try: 
     import pyximc_wrapper.pyximc
@@ -57,7 +57,7 @@ except ImportError:
     print ("Can't import pyximc module. The most probable reason is that you changed the relative location of the test_Python.py and pyximc.py files. See developers' documentation for details.")
     exit()
 
-from src.windows.translator_controller import (initialize_axes,
+from windows.translator_controller import (initialize_axes,
                                                close_axes,
                                                user_calibration,
                                                movement_setter,
