@@ -29,26 +29,26 @@ except ModuleNotFoundError:
     connection_type = 'Ethernet'
     
 # КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ˅ ˅ ˅ ˅
-# # Dependences
+# Dependences
     
-# # For correct usage of the library libximc,
-# # you need to add the file pyximc.py wrapper with the structures of the library to python path.
-# cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
-# ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
-# sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
+# For correct usage of the library libximc,
+# you need to add the file pyximc.py wrapper with the structures of the library to python path.
+cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
+ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
+sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
-# # Depending on your version of Windows, add the path to the required DLLs to the environment variable
-# # bindy.dll
-# # libximc.dll
-# # xiwrapper.dll
-# if platform.system() == "Windows":
-#     # Determining the directory with dependencies for windows depending on the bit depth.
+# Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# bindy.dll
+# libximc.dll
+# xiwrapper.dll
+if platform.system() == "Windows":
+    # Determining the directory with dependencies for windows depending on the bit depth.
     
-#     if sys.version_info >= (3,8):
-#         os.add_dll_directory(ximc_package_dir)
-#         os.add_dll_directory(os.path.abspath('c:/windows/system32'))
-#     if not ximc_package_dir in os.environ["Path"]:
-#         os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
+    if sys.version_info >= (3,8):
+        os.add_dll_directory(ximc_package_dir)
+        os.add_dll_directory(os.path.abspath('c:/windows/system32'))
+    if not ximc_package_dir in os.environ["Path"]:
+        os.environ["Path"] = ximc_package_dir + ";" + os.environ["Path"] # add dll path into an environment variable
 # # КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ^ ^ ^ ^
 
 try: 
@@ -497,7 +497,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         except NameError:
             self.show_info("Не удалось подключиться к подвижке")
             return
-        movement_setter(self.device_x, self.device_y, 4000, 2000, 4000)
+        movement_setter(self.device_x, self.device_y, 2000, 2000, 4000)
         self.user_unit = user_calibration(self.calibration_ratio)
         set_zero(self.device_x, self.device_y)
         self.show_info("Подвижка подключена")
@@ -879,9 +879,9 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
             self.show_info(f'Архив {user_record[0]} не содержит файлов результатов')
             return
         
-        self.x_coords_list = list(self.main_df['X_pos'][self.main_df['X_pos'].notna()])
-        self.diameters_list = list(self.main_df['Diameter'][self.main_df['Diameter'].notna()])
-        self.translator_move_history = [self.raw_df['X_pos'],self.raw_df['Y_pos']]
+        self.x_coords_list = list(self.main_df['X_pos(mm)'][self.main_df['X_pos(mm)'].notna()])
+        self.diameters_list = list(self.main_df['Diameter(mm)'][self.main_df['Diameter(mm)'].notna()])
+        self.translator_move_history = [self.raw_df['X_pos(mm)'],self.raw_df['Y_pos(mm)']]
         try:
             self.wave_length = int(self.main_df.iloc[-1]['N'].split('=')[1])
             self.wave_length_line.setText(str(self.wave_length))
@@ -900,8 +900,8 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
         self.main_points.setData(symbolBrush=symbol_brushs)
         
         try:
-            self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Y_pos'])
-            self.power_list = list(self.raw_df.loc[self.raw_df['X_pos'] == mypoint]['Value'])
+            self.local_coords_list = list(self.raw_df.loc[self.raw_df['X_pos(mm)'] == mypoint]['Y_pos(mm)'])
+            self.power_list = list(self.raw_df.loc[self.raw_df['X_pos(mm)'] == mypoint]['Value(W)'])
         except AttributeError:
             self.show_info("Для просмотра отдельных точек записи сохраните её")
             self.show_info("и откройте в режиме просмотра.")
