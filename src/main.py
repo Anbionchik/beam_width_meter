@@ -29,18 +29,18 @@ except ModuleNotFoundError:
     connection_type = 'Ethernet'
     
 # КОММЕНТИРОВАТЬ ЭТОТ БЛОК ПЕРЕД ЗАПУСКОМ pyinstaller ˅ ˅ ˅ ˅
-# Dependences
+# # Dependences
     
-# For correct usage of the library libximc,
-# you need to add the file pyximc.py wrapper with the structures of the library to python path.
+# # For correct usage of the library libximc,
+# # you need to add the file pyximc.py wrapper with the structures of the library to python path.
 # cur_dir = os.path.abspath(os.path.dirname(__file__)) # Specifies the current directory.
 # ximc_package_dir = os.path.join(cur_dir, "pyximc_wrapper") # Formation of the directory name with python dependencies.
 # sys.path.append(ximc_package_dir)  # add pyximc.py wrapper to python path
 
-# Depending on your version of Windows, add the path to the required DLLs to the environment variable
-# bindy.dll
-# libximc.dll
-# xiwrapper.dll
+# # Depending on your version of Windows, add the path to the required DLLs to the environment variable
+# # bindy.dll
+# # libximc.dll
+# # xiwrapper.dll
 # if platform.system() == "Windows":
 #     # Determining the directory with dependencies for windows depending on the bit depth.
     
@@ -369,7 +369,7 @@ class BeamWidthMeterApp(QtWidgets.QMainWindow, main_window.Ui_MainWindow):
                 self.show_info("Измеритель мощности подключён: " + in_data)
                 wavelength = self.get_wave_length()
                 self.wave_length_line.setText(wavelength)
-                self.wave_length = int(wavelength)
+                self.wave_length = float(wavelength)
             else:
                 if AUTO_CONNECTION:
                     self.show_info("Подключение в автоматическом режиме не удалось,")
