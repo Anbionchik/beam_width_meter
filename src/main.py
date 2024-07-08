@@ -19,6 +19,21 @@ from statistics import mean
 import platform
 from windows import powermeter_dialog, settings_dialog, main_window, warn_dialog
 
+
+    
+from pyximc_wrapper.logger import StreamToLogger
+import logging
+
+logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+        filename='out.log',
+        filemode='a'
+        )
+log = logging.getLogger('beam_measurment')
+sys.stdout = StreamToLogger(log,logging.INFO)
+sys.stderr = StreamToLogger(log,logging.ERROR)
+
 without_USB = False
 connection_type = 'USB'
 try:
